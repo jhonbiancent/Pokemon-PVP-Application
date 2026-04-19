@@ -2,37 +2,49 @@ import { getRandomMove } from "./ai";
 import { dealDamage, isGameOver } from "./battleEngine";
 import { BattleState } from "./battleTypes";
 
-export function playerAttack(state: BattleState, moveIndex: number) {
-  if (state.winner) return state;
-
+export function playerAttack(
+  state: BattleState,
+  moveIndex: number,
+): BattleState {
   const move = state.player.moves[moveIndex];
 
-  const newEnemyHp = dealDamage(state.enemy.hp, move);
+  const enemyHp = dealDamage(state.enemy.hp, move);
 
-  state.enemy.hp = newEnemyHp;
-  state.log.push(`Player used ${move.name}`);
+  let newState: BattleState = {
+    ...state,
+    enemy: {
+      ...state.enemy,
+      hp: enemyHp,
+    },
+    log: [...state.log, `Player used ${move.name}`],
+  };
 
-  const winner = isGameOver(state);
+  const winner = isGameOver(newState);
   if (winner) {
-    state.winner = winner;
-    return state;
+    return { ...newState, winner };
   }
 
-  return enemyTurn(state);
+  return enemyTurn(newState);
 }
 
-export function enemyTurn(state: BattleState) {
+export function enemyTurn(state: BattleState): BattleState {
   const move = getRandomMove(state.enemy);
 
-  const newPlayerHp = dealDamage(state.player.hp, move);
+  const playerHp = dealDamage(state.player.hp, move);
 
-  state.player.hp = newPlayerHp;
-  state.log.push(`Enemy used ${move.name}`);
+  let newState: BattleState = {
+    ...state,
+    player: {
+      ...state.player,
+      hp: playerHp,
+    },
+    log: [...state.log, `Enemy used ${move.name}`],
+  };
 
-  const winner = isGameOver(state);
+  const winner = isGameOver(newState);
   if (winner) {
-    state.winner = winner;
+    return { ...newState, winner };
   }
 
-  return state;
+  return newState;
 }

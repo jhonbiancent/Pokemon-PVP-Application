@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { Button, Text, View } from "react-native";
+import { Text, View } from "react-native";
+
+import MoveButton from "../components/moveButton";
+import PokemonCard from "../components/pokemonCard";
+
 import { BattleState } from "../battle/battleTypes";
 import { playerAttack } from "../battle/turnManager";
 
@@ -15,39 +19,55 @@ export default function BattleScreen({ route }: any) {
   });
 
   const attack = (index: number) => {
-    const newState = { ...state };
-    playerAttack(newState, index);
-    setState({ ...newState });
+    const updated = playerAttack(state, index);
+    setState(updated);
   };
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   return (
-    <View style={{ padding: 20, marginTop: 40 }}>
-      <Text>Enemy: {state.enemy.name}</Text>
-      <Text>HP: {state.enemy.hp}</Text>
+    <View
+      style={{
+        flex: 1,
+        padding: 20,
+        justifyContent: "space-between",
+      }}
+    >
+      {/* Enemy */}
+      <PokemonCard pokemon={state.enemy} />
 
-      <Text style={{ marginTop: 20 }}>You: {state.player.name}</Text>
-      <Text>HP: {state.player.hp}</Text>
+      {/* Battle Log */}
+      <View>
+        {state.log.slice(-2).map((l, i) => (
+          <Text key={i}>{l}</Text>
+        ))}
+      </View>
 
-      <View style={{ marginTop: 30 }}>
-        {state.player.moves.map((m, i) => (
-          <Button
-            key={i}
-            title={m.name}
-            onPress={() => attack(i)}
-            disabled={!!state.winner}
-          />
+      {/* Player */}
+      <PokemonCard pokemon={state.player} />
+
+      {/* Moves */}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+        }}
+      >
+        {state.player.moves.map((move, i) => (
+          <MoveButton key={i} move={move} onPress={() => attack(i)} />
         ))}
       </View>
 
       {state.winner && (
-        <Text style={{ marginTop: 20 }}>Winner: {state.winner}</Text>
+        <Text
+          style={{
+            textAlign: "center",
+            fontSize: 20,
+          }}
+        >
+          Winner: {state.winner}
+        </Text>
       )}
-
-      <View style={{ marginTop: 20 }}>
-        {state.log.slice(-5).map((l, i) => (
-          <Text key={i}>{l}</Text>
-        ))}
-      </View>
     </View>
   );
 }
