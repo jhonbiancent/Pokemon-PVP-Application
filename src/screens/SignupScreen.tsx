@@ -28,6 +28,7 @@ export default function SignupScreen({ navigation }: any) {
       // Map username to a placeholder email for Supabase Auth
       const email = `${username.toLowerCase()}@pokemon.app`;
 
+      console.log("Attempting signup for:", email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -39,19 +40,26 @@ export default function SignupScreen({ navigation }: any) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Auth Error:", error);
+        throw error;
+      }
 
+      console.log("Auth successful, inserting into users table...");
       // Also insert into public.users table as per user schema
       const { error: dbError } = await supabase.from("users").insert([
         {
           id: data.user?.id,
           username: username.toLowerCase(),
           name,
-          password, // Storing plaintext as per schema (NOT RECOMMENDED, but following provided schema)
+          password,
         },
       ]);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error("Database Insert Error:", dbError);
+        throw dbError;
+      }
 
       alert("Signup successful! Please log in.");
       navigation.navigate("Login");
