@@ -1,0 +1,11 @@
+export async function fetchPokemon(name: string) {
+  const res = await fetch(
+    `https://pokeapi.co/api/v2/pokemon/${name.toLowerCase()}`,
+  );
+
+  if (!res.ok) {
+    throw new Error("Pokemon not found");
+  }
+
+  return res.json();
+}
