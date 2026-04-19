@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 import BattleActions from "../components/battleActions";
@@ -8,8 +8,23 @@ import { getRandomMove } from "../battle/ai";
 import { dealDamage, isGameOver } from "../battle/battleEngine";
 import { BattleState } from "../battle/battleTypes";
 
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+
+const playCry = async (url: string) => {
+  try {
+    const player = createAudioPlayer({ uri: url });
+    await player.play();
+  } catch (e) {
+    console.log("Cry error:", e);
+  }
+};
 export default function BattleScreen({ route }: any) {
   const { player, enemy } = route.params;
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true });
+    playCry(enemy.cry);
+  }, []);
 
   const [state, setState] = useState<BattleState>({
     player,
@@ -36,6 +51,7 @@ export default function BattleScreen({ route }: any) {
       ...s,
       log: [...s.log, `Player used ${move.name}!`],
     }));
+    playCry(state.player.cry);
 
     // Trigger Attack Animation (Move toward opponent)
     await delay(500);
@@ -75,6 +91,7 @@ export default function BattleScreen({ route }: any) {
       ...s,
       log: [...s.log, `Enemy used ${enemyMove.name}!`],
     }));
+    playCry(state.enemy.cry);
 
     // Trigger Attack Animation
     await delay(500);
@@ -105,7 +122,9 @@ export default function BattleScreen({ route }: any) {
         backgroundColor: "white",
       }}
     >
-      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 10 }}>
+      <View
+        style={{ flex: 1, justifyContent: "center", paddingHorizontal: 10 }}
+      >
         {/* Enemy */}
         <PokemonCard
           pokemon={state.enemy}
@@ -114,7 +133,9 @@ export default function BattleScreen({ route }: any) {
         />
 
         {/* Battle Log */}
-        <View style={{ height: 50, justifyContent: "center", marginVertical: 40 }}>
+        <View
+          style={{ height: 50, justifyContent: "center", marginVertical: 40 }}
+        >
           {state.log.slice(-2).map((l, i) => (
             <Text
               key={i}

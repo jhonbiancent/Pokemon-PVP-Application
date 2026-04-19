@@ -16,10 +16,12 @@ export async function getPokemon(
   return {
     name: data.name,
     level,
+    type: data.types.map((t: any) => t.type.name),
     hp,
     maxHp: hp,
     frontImage: data.sprites.other.showdown.front_default,
     backImage: data.sprites.other.showdown.back_default,
     moves: selectMoves(data.moves),
+    cry: `https://play.pokemonshowdown.com/audio/cries/${data.name}.mp3`,
   };
 }
