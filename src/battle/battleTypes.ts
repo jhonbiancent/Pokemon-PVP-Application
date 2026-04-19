@@ -6,5 +6,6 @@ export type BattleState = {
   turn: "player" | "enemy";
   log: string[];
   winner: "player" | "enemy" | null;
-  isAttacking: boolean;
+  attackingSide: "player" | "enemy" | null;
+  hitSide: "player" | "enemy" | null;
 };

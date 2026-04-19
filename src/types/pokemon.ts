@@ -8,6 +8,7 @@ export type Pokemon = {
   level: number;
   hp: number;
   maxHp: number;
-  image: string;
+  frontImage: string;
+  backImage: string;
   moves: Move[];
 };

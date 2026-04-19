@@ -17,64 +17,80 @@ export default function BattleScreen({ route }: any) {
     turn: "player",
     log: [],
     winner: null,
-    isAttacking: false,
+    attackingSide: null,
+    hitSide: null,
   });
 
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
   const attack = async (index: number) => {
-    if (state.isAttacking || state.winner) return;
+    if (state.attackingSide || state.winner) return;
 
-    // 1. Start Attack
-    setState((s) => ({ ...s, isAttacking: true }));
-
+    // 1. Player Turn
     const move = state.player.moves[index];
 
-    // 2. Display "Player used..." message after 0.5s
+    // Show "Player used..."
     await delay(500);
     setState((s) => ({
       ...s,
       log: [...s.log, `Player used ${move.name}!`],
     }));
 
-    // 3. Take 1 second for damage to hit
-    await delay(1000);
+    // Trigger Attack Animation (Move toward opponent)
+    await delay(500);
+    setState((s) => ({ ...s, attackingSide: "player" }));
+
+    // Wait for movement to "hit", then trigger Hit Animation (Shake) + Damage
+    await delay(400); // Wait for move animation to reach opponent
+    setState((s) => ({ ...s, hitSide: "enemy", attackingSide: null }));
+
     const newEnemyHp = dealDamage(state.enemy.hp, move);
     const afterPlayerAttack: BattleState = {
       ...state,
       enemy: { ...state.enemy, hp: newEnemyHp },
-      isAttacking: false, // temporarily false to check game over
+      hitSide: null,
+      attackingSide: null,
     };
 
     const winnerAfterPlayer = isGameOver(afterPlayerAttack);
     if (winnerAfterPlayer) {
-      setState({ ...afterPlayerAttack, winner: winnerAfterPlayer, isAttacking: false });
+      setState({
+        ...afterPlayerAttack,
+        winner: winnerAfterPlayer,
+      });
       return;
     }
 
-    // Update state with damage
     setState(afterPlayerAttack);
 
-    // 4. Enemy Turn (with similar delays)
-    await delay(1000); // 1s delay between attacks
-    setState((s) => ({ ...s, isAttacking: true, turn: "enemy" }));
-
+    // 2. Enemy Turn
+    await delay(1000); // Pause between turns
     const enemyMove = getRandomMove(state.enemy);
 
+    // Show "Enemy used..."
+    setState((s) => ({ ...s, turn: "enemy" }));
     await delay(500);
     setState((s) => ({
       ...s,
       log: [...s.log, `Enemy used ${enemyMove.name}!`],
     }));
 
-    await delay(1000);
+    // Trigger Attack Animation
+    await delay(500);
+    setState((s) => ({ ...s, attackingSide: "enemy" }));
+
+    // Trigger Hit + Damage
+    await delay(400);
+    setState((s) => ({ ...s, hitSide: "player", attackingSide: null }));
+
     const newPlayerHp = dealDamage(state.player.hp, enemyMove);
     const afterEnemyAttack: BattleState = {
       ...afterPlayerAttack,
       player: { ...state.player, hp: newPlayerHp },
       turn: "player",
-      isAttacking: false,
+      hitSide: null,
+      attackingSide: null,
     };
 
     const winnerAfterEnemy = isGameOver(afterEnemyAttack);
@@ -85,12 +101,16 @@ export default function BattleScreen({ route }: any) {
     <View
       style={{
         flex: 1,
-        padding: 20,
+        padding: 10,
         justifyContent: "space-between",
       }}
     >
       {/* Enemy */}
-      <PokemonCard pokemon={state.enemy} />
+      <PokemonCard
+        pokemon={state.enemy}
+        isAttacking={state.attackingSide === "enemy"}
+        isHit={state.hitSide === "enemy"}
+      />
 
       {/* Battle Log */}
       <View style={{ height: 60, justifyContent: "center" }}>
@@ -99,10 +119,28 @@ export default function BattleScreen({ route }: any) {
             {l}
           </Text>
         ))}
+
+        {state.winner && (
+          <Text
+            style={{
+              textAlign: "center",
+              fontSize: 24,
+              fontWeight: "bold",
+              color: state.winner === "player" ? "green" : "red",
+            }}
+          >
+            {state.winner === "player" ? "YOU WIN!" : "YOU LOSE!"}
+          </Text>
+        )}
       </View>
 
       {/* Player */}
-      <PokemonCard pokemon={state.player} />
+      <PokemonCard
+        pokemon={state.player}
+        isBack={true}
+        isAttacking={state.attackingSide === "player"}
+        isHit={state.hitSide === "player"}
+      />
 
       {/* Moves */}
       <View
@@ -110,6 +148,8 @@ export default function BattleScreen({ route }: any) {
           flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "center",
+          backgroundColor: "skyblue",
+          height: 140,
         }}
       >
         {state.player.moves.map((move, i) => (
@@ -117,23 +157,10 @@ export default function BattleScreen({ route }: any) {
             key={i}
             move={move}
             onPress={() => attack(i)}
-            disabled={state.isAttacking || !!state.winner}
+            disabled={!!state.attackingSide || !!state.winner}
           />
         ))}
       </View>
-
-      {state.winner && (
-        <Text
-          style={{
-            textAlign: "center",
-            fontSize: 24,
-            fontWeight: "bold",
-            color: state.winner === "player" ? "green" : "red",
-          }}
-        >
-          {state.winner === "player" ? "YOU WIN!" : "YOU LOSE!"}
-        </Text>
-      )}
     </View>
   );
 }

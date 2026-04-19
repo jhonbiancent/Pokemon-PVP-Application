@@ -61,7 +61,7 @@ export default function SelectPokemonScreen({ navigation }: any) {
           <Text>{pokemon.name}</Text>
 
           <Image
-            source={{ uri: pokemon.image }}
+            source={{ uri: pokemon.frontImage }}
             style={{ width: 100, height: 100 }}
           />
 
