@@ -71,9 +71,9 @@ export default function PokemonCard({
   return (
     <View
       style={{
-        alignItems: isBack ? "flex-start" : "flex-end", // Player on left, Enemy on right
+        alignItems: isBack ? "flex-start" : "flex-end",
         width: "100%",
-        height: 180, // Fixed height to prevent shifting
+        height: 140, // Reduced from 180
         justifyContent: "center",
       }}
     >
@@ -81,10 +81,10 @@ export default function PokemonCard({
       <View
         style={{
           padding: 8,
-          width: isBack ? "45%" : "55%",
-          zIndex: 10,
+          width: isBack ? "45%" : "50%",
+          zIndex: 1,
           position: "absolute",
-          top: isBack ? -20 : 0, // Moved higher for player (was 20)
+          top: isBack ? -20 : 0, // Adjusted top
           [isBack ? "right" : "left"]: 10,
         }}
       >
@@ -100,14 +100,14 @@ export default function PokemonCard({
           transform: [{ translateY: moveAnim }, { translateX: shakeAnim }],
           position: "absolute",
           bottom: 0,
-          [isBack ? "left" : "right"]: isBack ? 0 : 20, // Moved player more to the left (was 20)
+          [isBack ? "left" : "right"]: isBack ? 0 : 40,
         }}
       >
         <Image
           source={{ uri: imageSource }}
           style={{
-            width: isBack ? 220 : 180,
-            height: isBack ? 220 : 180,
+            width: isBack ? 200 : 160,
+            height: isBack ? 200 : 160,
             resizeMode: "contain",
           }}
         />

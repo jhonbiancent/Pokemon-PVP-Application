@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 
-import MoveButton from "../components/moveButton";
+import BattleActions from "../components/battleActions";
 import PokemonCard from "../components/pokemonCard";
 
 import { getRandomMove } from "../battle/ai";
@@ -101,66 +101,61 @@ export default function BattleScreen({ route }: any) {
     <View
       style={{
         flex: 1,
-        padding: 10,
         justifyContent: "space-between",
+        backgroundColor: "white",
       }}
     >
-      {/* Enemy */}
-      <PokemonCard
-        pokemon={state.enemy}
-        isAttacking={state.attackingSide === "enemy"}
-        isHit={state.hitSide === "enemy"}
-      />
+      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 10 }}>
+        {/* Enemy */}
+        <PokemonCard
+          pokemon={state.enemy}
+          isAttacking={state.attackingSide === "enemy"}
+          isHit={state.hitSide === "enemy"}
+        />
 
-      {/* Battle Log */}
-      <View style={{ height: 60, justifyContent: "center" }}>
-        {state.log.slice(-2).map((l, i) => (
-          <Text key={i} style={{ textAlign: "center", fontWeight: "bold" }}>
-            {l}
-          </Text>
-        ))}
+        {/* Battle Log */}
+        <View style={{ height: 50, justifyContent: "center", marginVertical: 40 }}>
+          {state.log.slice(-2).map((l, i) => (
+            <Text
+              key={i}
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+              }}
+            >
+              {l}
+            </Text>
+          ))}
 
-        {state.winner && (
-          <Text
-            style={{
-              textAlign: "center",
-              fontSize: 24,
-              fontWeight: "bold",
-              color: state.winner === "player" ? "green" : "red",
-            }}
-          >
-            {state.winner === "player" ? "YOU WIN!" : "YOU LOSE!"}
-          </Text>
-        )}
+          {state.winner && (
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 24,
+                fontWeight: "bold",
+                color: state.winner === "player" ? "#4CAF50" : "#F44336",
+              }}
+            >
+              {state.winner === "player" ? "YOU WIN!" : "YOU LOSE!"}
+            </Text>
+          )}
+        </View>
+
+        {/* Player */}
+        <PokemonCard
+          pokemon={state.player}
+          isBack={true}
+          isAttacking={state.attackingSide === "player"}
+          isHit={state.hitSide === "player"}
+        />
       </View>
 
-      {/* Player */}
-      <PokemonCard
-        pokemon={state.player}
-        isBack={true}
-        isAttacking={state.attackingSide === "player"}
-        isHit={state.hitSide === "player"}
+      {/* Battle Actions Menu */}
+      <BattleActions
+        moves={state.player.moves}
+        onMovePress={attack}
+        disabled={!!state.attackingSide || !!state.winner}
       />
-
-      {/* Moves */}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          backgroundColor: "skyblue",
-          height: 140,
-        }}
-      >
-        {state.player.moves.map((move, i) => (
-          <MoveButton
-            key={i}
-            move={move}
-            onPress={() => attack(i)}
-            disabled={!!state.attackingSide || !!state.winner}
-          />
-        ))}
-      </View>
     </View>
   );
 }
