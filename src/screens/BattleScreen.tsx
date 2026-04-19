@@ -119,7 +119,7 @@ export default function BattleScreen({ route }: any) {
       style={{
         flex: 1,
         justifyContent: "space-between",
-        backgroundColor: "white",
+        backgroundColor: "#1F2937",
       }}
     >
       <View

@@ -89,10 +89,13 @@ export default function PokemonCard({
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Text style={{ fontWeight: "bold", fontSize: 14 }}>
+          <Text style={{ fontWeight: "bold", fontSize: 14, color: "white" }}>
             {pokemon.name.toUpperCase()}
           </Text>
-          <Text style={{ fontSize: 14 }}> lvl {pokemon.level}</Text>
+          <Text style={{ fontSize: 14, color: "white" }}>
+            {" "}
+            lvl {pokemon.level}
+          </Text>
         </div>
 
         <HpBar hp={pokemon.hp} maxHp={pokemon.maxHp} />

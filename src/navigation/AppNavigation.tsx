@@ -32,9 +32,27 @@ export default function AppNavigator() {
       ) : (
         // App Flow
         <>
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            options={{
+              title: "DASHBOARD",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+          />
           <Stack.Screen name="SelectPokemon" component={SelectPokemonScreen} />
-          <Stack.Screen name="Battle" component={BattleScreen} />
+          <Stack.Screen
+            name="Battle"
+            component={BattleScreen}
+            options={{
+              title: "DASHBOARD",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+          />
         </>
       )}
     </Stack.Navigator>

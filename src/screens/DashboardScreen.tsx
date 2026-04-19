@@ -1,32 +1,56 @@
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import PokemonCard from "../components/pokemonRosterCard";
 import { useAuth } from "../context/AuthContext";
+import { getPokemon } from "../hooks/usePokemon";
 import { useTeam } from "../hooks/useTeam";
 
 export default function DashboardScreen({ navigation }: any) {
   const { user } = useAuth();
+  const { team, loading, refetch } = useTeam(user?.id ?? "");
 
-  const { team, loading } = useTeam(user?.id ?? "");
+  // Add this function inside DashboardScreen
+  const handleBattle = async () => {
+    if (team.length === 0) {
+      Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
+      return;
+    }
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+    try {
+      const enemy = await getPokemon("charmander", 12); // or random enemy
+      navigation.navigate("Battle", {
+        player: team[0], // first pokemon in roster
+        enemy,
+      });
+    } catch (e) {
+      Alert.alert("Error", "Could not load battle. Try again.");
+    }
+  };
+
+  if (loading)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color="#818CF8" size="large" />
+      </View>
+    );
 
   return (
     <View style={styles.container}>
-      {/* Trainer Header */}
+      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Welcome back,</Text>
           <Text style={styles.username}>{user?.name ?? "Trainer"} 👋</Text>
         </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>🏅 Trainer</Text>
+        <View style={styles.trainerBadge}>
+          <Text style={styles.trainerBadgeText}>🏅 Trainer</Text>
         </View>
       </View>
 
@@ -36,12 +60,14 @@ export default function DashboardScreen({ navigation }: any) {
           <Text style={styles.statNumber}>{team.length}/6</Text>
           <Text style={styles.statLabel}>Team Size</Text>
         </View>
+        <View style={styles.statDivider} />
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>
             {team.length > 0 ? Math.max(...team.map((p) => p.level)) : 0}
           </Text>
-          <Text style={styles.statLabel}>Highest Level</Text>
+          <Text style={styles.statLabel}>Highest Lv.</Text>
         </View>
+        <View style={styles.statDivider} />
         <View style={styles.statBox}>
           <Text style={styles.statNumber}>
             {[...new Set(team.flatMap((p) => p.type))].length}
@@ -50,23 +76,29 @@ export default function DashboardScreen({ navigation }: any) {
         </View>
       </View>
 
-      {/* My Pokémon Section */}
+      {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Pokémon</Text>
-        {team.length < 6 && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate("SelectPokemon", { team })}
-          >
-            <Text style={styles.addButtonText}>+ Add</Text>
+        <Text style={styles.sectionTitle}>My Pokémon Team</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {/* 👇 Refresh button */}
+          <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
+            <Text style={styles.refreshButtonText}>↻</Text>
           </TouchableOpacity>
-        )}
+
+          {team.length < 6 && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate("SelectPokemon", { team })}
+            >
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {team.length === 0 ? (
-        // Empty state
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🎮</Text>
+          <Text style={styles.emptyEmoji}>⚡</Text>
           <Text style={styles.emptyTitle}>No Pokémon yet!</Text>
           <Text style={styles.emptySubtitle}>
             Start building your team by adding your first Pokémon.
@@ -83,56 +115,73 @@ export default function DashboardScreen({ navigation }: any) {
           data={team}
           keyExtractor={(_, i) => i.toString()}
           numColumns={2}
-          contentContainerStyle={{ padding: 10, gap: 10 }}
-          columnWrapperStyle={{ gap: 10 }}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Image source={{ uri: item.frontImage }} style={styles.sprite} />
-              <Text style={styles.pokeName}>{item.name}</Text>
-              <Text style={styles.pokeType}>{item.type.join(" / ")}</Text>
-              <Text style={styles.pokeLevel}>Lv. {item.level}</Text>
-              <Text style={styles.pokeHp}>
-                HP: {item.hp}/{item.maxHp}
-              </Text>
-            </View>
-          )}
+          contentContainerStyle={{ padding: 12, gap: 12 }}
+          columnWrapperStyle={{ gap: 12 }}
+          renderItem={({ item }) => <PokemonCard pokemon={item} />}
         />
       )}
+      <View style={styles.battleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.battleButton,
+            team.length === 0 && styles.battleButtonDisabled,
+          ]}
+          onPress={handleBattle}
+          disabled={team.length === 0}
+        >
+          <Text style={styles.battleButtonText}>Battle</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#030712" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#030712",
+  },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#1a1a2e",
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 56,
     paddingBottom: 20,
+    backgroundColor: "#030712",
   },
-  greeting: { fontSize: 14, color: "#aaa" },
-  username: { fontSize: 22, fontWeight: "bold", color: "white" },
-  badge: {
-    backgroundColor: "#2a2a4e",
+  greeting: { fontSize: 13, color: "#6B7280", letterSpacing: 0.5 },
+  username: { fontSize: 24, fontWeight: "800", color: "#F9FAFB" },
+  trainerBadge: {
+    backgroundColor: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#374151",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  badgeText: { color: "#fff", fontSize: 13 },
+  trainerBadgeText: { color: "#D1D5DB", fontSize: 13 },
 
   statsBar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#16213e",
+    alignItems: "center",
+    backgroundColor: "#111827",
+    marginHorizontal: 16,
+    borderRadius: 16,
     paddingVertical: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#1F2937",
   },
-  statBox: { alignItems: "center" },
-  statNumber: { fontSize: 24, fontWeight: "bold", color: "white" },
-  statLabel: { fontSize: 12, color: "#aaa" },
+  statBox: { alignItems: "center", flex: 1 },
+  statNumber: { fontSize: 22, fontWeight: "bold", color: "#818CF8" },
+  statLabel: { fontSize: 11, color: "#6B7280", marginTop: 2 },
+  statDivider: { width: 1, height: 30, backgroundColor: "#1F2937" },
 
   sectionHeader: {
     flexDirection: "row",
@@ -141,14 +190,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#1a1a2e" },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#F9FAFB" },
   addButton: {
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#818CF8",
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  addButtonText: { color: "white", fontWeight: "bold" },
+  addButtonText: { color: "white", fontWeight: "bold", fontSize: 13 },
 
   emptyContainer: {
     flex: 1,
@@ -156,38 +205,59 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 40,
   },
-  emptyEmoji: { fontSize: 60, marginBottom: 16 },
+  emptyEmoji: { fontSize: 56, marginBottom: 16 },
   emptyTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1a1a2e",
+    color: "#F9FAFB",
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: "gray",
+    color: "#6B7280",
     textAlign: "center",
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#818CF8",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
   },
-  emptyButtonText: { color: "white", fontWeight: "bold", fontSize: 15 },
-
-  card: {
-    flex: 1,
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-    elevation: 2,
+  emptyButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 15,
   },
-  sprite: { width: 80, height: 80 },
-  pokeName: { fontSize: 16, fontWeight: "bold", textTransform: "capitalize" },
-  pokeType: { fontSize: 12, color: "gray" },
-  pokeLevel: { fontSize: 13, color: "#555" },
-  pokeHp: { fontSize: 13, color: "#e53935" },
+  refreshButton: {
+    backgroundColor: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  refreshButtonText: { color: "#9CA3AF", fontWeight: "bold", fontSize: 16 },
+  battleContainer: {
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: "#030712",
+    borderTopWidth: 1,
+    borderTopColor: "#1F2937",
+  },
+  battleButton: {
+    backgroundColor: "#0A0D2E",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  battleButtonDisabled: {
+    backgroundColor: "#374151",
+  },
+  battleButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+    letterSpacing: 1,
+  },
 });

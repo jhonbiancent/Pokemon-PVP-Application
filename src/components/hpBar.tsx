@@ -45,7 +45,7 @@ export default function HpBar({ hp, maxHp }: Props) {
         />
       </View>
 
-      <Text>
+      <Text style={{ color: "white" }}>
         {Math.round(hp)} / {maxHp}
       </Text>
     </View>

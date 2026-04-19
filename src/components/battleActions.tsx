@@ -18,25 +18,25 @@ export default function BattleActions({ moves, onMovePress, disabled }: Props) {
           label="Fight"
           onPress={() => setMenu("fight")}
           disabled={disabled}
-          color="#FCC060" // Orange
+          color="#0A0D2E" // Orange
         />
         <BattleButton
           label="Pokemon"
           onPress={() => {}}
           disabled={disabled}
-          color="#4CAF50" // Green
+          color="#0A0D2E" // Green
         />
         <BattleButton
           label="Bag"
           onPress={() => {}}
           disabled={disabled}
-          color="#2196F3" // Blue
+          color="#0A0D2E" // Blue
         />
         <BattleButton
           label="Run"
           onPress={() => {}}
           disabled={disabled}
-          color="#F44336" //
+          color="#0A0D2E" //
         />
       </View>
     );
@@ -71,8 +71,9 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: "100%",
     height: 160,
-    backgroundColor: "#B2F7A1",
+    backgroundColor: "#030712",
     padding: 6,
+    color: "white",
     paddingBottom: 20,
     justifyContent: "space-between",
     alignContent: "space-between",
