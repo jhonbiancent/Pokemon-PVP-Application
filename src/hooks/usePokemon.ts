@@ -18,8 +18,8 @@ export async function getPokemon(
     level,
     hp,
     maxHp: hp,
-    frontImage: data.sprites.front_default,
-    backImage: data.sprites.back_default,
+    frontImage: data.sprites.other.showdown.front_default,
+    backImage: data.sprites.other.showdown.back_default,
     moves: selectMoves(data.moves),
   };
 }
