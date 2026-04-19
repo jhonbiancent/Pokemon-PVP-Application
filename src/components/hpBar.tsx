@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Text, View } from "react-native";
 
 type Props = {
   hp: number;
@@ -7,6 +8,20 @@ type Props = {
 
 export default function HpBar({ hp, maxHp }: Props) {
   const percent = (hp / maxHp) * 100;
+  const animatedWidth = useRef(new Animated.Value(percent)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedWidth, {
+      toValue: percent,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [percent]);
+
+  const color = animatedWidth.interpolate({
+    inputRange: [20, 50, 100],
+    outputRange: ["red", "orange", "green"],
+  });
 
   return (
     <View style={{ marginVertical: 5 }}>
@@ -18,18 +33,20 @@ export default function HpBar({ hp, maxHp }: Props) {
           overflow: "hidden",
         }}
       >
-        <View
+        <Animated.View
           style={{
-            width: `${percent}%`,
+            width: animatedWidth.interpolate({
+              inputRange: [0, 100],
+              outputRange: ["0%", "100%"],
+            }),
             height: "100%",
-            backgroundColor:
-              percent > 50 ? "green" : percent > 20 ? "orange" : "red",
+            backgroundColor: color,
           }}
         />
       </View>
 
       <Text>
-        {hp} / {maxHp}
+        {Math.round(hp)} / {maxHp}
       </Text>
     </View>
   );
