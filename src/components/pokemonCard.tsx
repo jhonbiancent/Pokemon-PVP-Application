@@ -81,16 +81,20 @@ export default function PokemonCard({
       <View
         style={{
           padding: 8,
-          width: isBack ? "45%" : "50%",
+          width: isBack ? "40%" : "50%",
           zIndex: 1,
           position: "absolute",
           top: isBack ? -20 : 0, // Adjusted top
           [isBack ? "right" : "left"]: 10,
         }}
       >
-        <Text style={{ fontWeight: "bold", fontSize: 14 }}>
-          {pokemon.name.toUpperCase()}
-        </Text>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <Text style={{ fontWeight: "bold", fontSize: 14 }}>
+            {pokemon.name.toUpperCase()}
+          </Text>
+          <Text style={{ fontSize: 14 }}> lvl {pokemon.level}</Text>
+        </div>
+
         <HpBar hp={pokemon.hp} maxHp={pokemon.maxHp} />
       </View>
 
