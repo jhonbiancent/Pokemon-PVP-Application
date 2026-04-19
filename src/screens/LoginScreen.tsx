@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import StatusModal from "../components/statusModal";
+import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
 export default function LoginScreen({ navigation }: any) {
@@ -15,28 +17,54 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState<"success" | "error" | "info">(
+    "info",
+  );
+
+  const { login } = useAuth();
+
   const handleLogin = async () => {
     if (!username || !password) {
-      alert("Please enter username and password");
+      setModalMessage("Please enter username and password");
+      setModalType("error");
+      setModalVisible(true);
       return;
     }
 
     try {
       setLoading(true);
 
-      // Map username to the internal placeholder email
-      const email = `${username.toLowerCase()}@pokemon.app`;
+      const normalizedUsername = username.trim().toLowerCase();
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("username", normalizedUsername)
+        .eq("password", password)
+        .maybeSingle();
+
+      if (error || !data) {
+        setModalMessage("Invalid username or password");
+        setModalType("error");
+        setModalVisible(true);
+        return;
+      }
+
+      login({
+        id: data.id,
+        username: data.username,
+        name: data.name,
       });
 
-      if (error) throw error;
-
-      // Upon success, the AuthProvider's listener will update state, and navigation will redirect automatically.
+      setModalMessage("Login successful!");
+      setModalType("success");
+      setModalVisible(true);
     } catch (error: any) {
-      alert(error.message);
+      setModalMessage(error.message);
+      setModalType("error");
+      setModalVisible(true);
     } finally {
       setLoading(false);
     }
@@ -76,6 +104,19 @@ export default function LoginScreen({ navigation }: any) {
           Don't have an account? Sign Up
         </Text>
       </TouchableOpacity>
+
+      <StatusModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => {
+          setModalVisible(false);
+
+          if (modalType === "success") {
+            navigation.replace("Home");
+          }
+        }}
+      />
     </View>
   );
 }

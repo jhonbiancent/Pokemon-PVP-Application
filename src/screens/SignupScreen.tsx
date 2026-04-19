@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import StatusModal from "../components/statusModal";
 import { supabase } from "../lib/supabase";
 
 export default function SignupScreen({ navigation }: any) {
@@ -16,55 +17,55 @@ export default function SignupScreen({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState<"success" | "error" | "info">(
+    "info",
+  );
+
   const handleSignup = async () => {
     if (!username || !name || !password) {
-      alert("Please fill all fields");
+      setModalMessage("Please fill all fields");
+      setModalType("error");
+      setModalVisible(true);
       return;
     }
 
     try {
       setLoading(true);
 
-      // Map username to a placeholder email for Supabase Auth
-      const email = `${username.toLowerCase()}@pokemon.app`;
+      // check if username already exists
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("username")
+        .eq("username", username.toLowerCase())
+        .single();
 
-      console.log("Attempting signup for:", email);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            username: username.toLowerCase(),
-          },
-        },
-      });
-
-      if (error) {
-        console.error("Supabase Auth Error:", error);
-        throw error;
+      if (existingUser) {
+        setModalMessage("Username already taken");
+        setModalType("error");
+        setModalVisible(true);
+        return;
       }
 
-      console.log("Auth successful, inserting into users table...");
-      // Also insert into public.users table as per user schema
-      const { error: dbError } = await supabase.from("users").insert([
+      // insert directly to public.users
+      const { error } = await supabase.from("users").insert([
         {
-          id: data.user?.id,
           username: username.toLowerCase(),
           name,
           password,
         },
       ]);
 
-      if (dbError) {
-        console.error("Database Insert Error:", dbError);
-        throw dbError;
-      }
+      if (error) throw error;
 
-      alert("Signup successful! Please log in.");
-      navigation.navigate("Login");
+      setModalMessage("Signup successful! Please log in.");
+      setModalType("success");
+      setModalVisible(true);
     } catch (error: any) {
-      alert(error.message);
+      setModalMessage(error.message);
+      setModalType("error");
+      setModalVisible(true);
     } finally {
       setLoading(false);
     }
@@ -111,6 +112,19 @@ export default function SignupScreen({ navigation }: any) {
           Already have an account? Log In
         </Text>
       </TouchableOpacity>
+
+      <StatusModal
+        visible={modalVisible}
+        message={modalMessage}
+        type={modalType}
+        onClose={() => {
+          setModalVisible(false);
+
+          if (modalType === "success") {
+            navigation.navigate("Login");
+          }
+        }}
+      />
     </View>
   );
 }
