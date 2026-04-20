@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import { gen1Pokemon } from "../data/gen1Pokemon";
 import { usePokemonList } from "../hooks/usePokemonList";
 import { colors } from "../theme/color";
 
@@ -56,24 +57,54 @@ const TYPE_COLORS: Record<string, string> = {
   steel: "#78909C",
 };
 
+type OwnershipFilter = "all" | "owned" | "unowned";
+
 export default function PokemonListScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { pokemon, loading } = usePokemonList(user?.id ?? "");
+  const { pokemon: ownedPokemon, loading } = usePokemonList(user?.id ?? "");
+
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [ownershipDropdownOpen, setOwnershipDropdownOpen] = useState(false);
+  const [ownershipFilter, setOwnershipFilter] =
+    useState<OwnershipFilter>("all");
+
+  // Build owned names set for O(1) lookup
+  const ownedNames = useMemo(
+    () => new Set(ownedPokemon.map((p) => p.pk_name.toLowerCase())),
+    [ownedPokemon],
+  );
+
+  // Merge gen1 list with owned status
+  const mergedList = useMemo(
+    () =>
+      gen1Pokemon.map((p) => ({
+        ...p,
+        owned: ownedNames.has(p.name.toLowerCase()),
+      })),
+    [ownedNames],
+  );
 
   const filtered = useMemo(() => {
-    return pokemon.filter((p) => {
-      const matchesSearch = p.pk_name
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesType = selectedType
-        ? p.pk_types?.includes(selectedType)
-        : true;
-      return matchesSearch && matchesType;
+    return mergedList.filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+      const matchesType = selectedType ? p.types.includes(selectedType) : true;
+      const matchesOwnership =
+        ownershipFilter === "owned"
+          ? p.owned
+          : ownershipFilter === "unowned"
+            ? !p.owned
+            : true;
+      return matchesSearch && matchesType && matchesOwnership;
     });
-  }, [pokemon, search, selectedType]);
+  }, [mergedList, search, selectedType, ownershipFilter]);
+
+  const ownershipLabel = {
+    all: "All",
+    owned: "Owned",
+    unowned: "Unowned",
+  }[ownershipFilter];
 
   if (loading)
     return (
@@ -84,21 +115,30 @@ export default function PokemonListScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar + Filter Dropdown */}
+      {/* Search + Dropdowns Row */}
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}
           placeholder="Search Pokémon..."
           placeholderTextColor={colors.textMuted}
           value={search}
-          onChangeText={setSearch}
+          onChangeText={(t) => {
+            setSearch(t);
+            setTypeDropdownOpen(false);
+            setOwnershipDropdownOpen(false);
+          }}
         />
+
+        {/* Type Filter */}
         <TouchableOpacity
           style={[
             styles.filterButton,
             selectedType && { borderColor: TYPE_COLORS[selectedType] },
           ]}
-          onPress={() => setDropdownOpen(!dropdownOpen)}
+          onPress={() => {
+            setTypeDropdownOpen(!typeDropdownOpen);
+            setOwnershipDropdownOpen(false);
+          }}
         >
           <Text
             style={[
@@ -109,17 +149,38 @@ export default function PokemonListScreen({ navigation }: any) {
             {selectedType ?? "Type"} ▾
           </Text>
         </TouchableOpacity>
+
+        {/* Ownership Filter */}
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            ownershipFilter !== "all" && { borderColor: colors.accent },
+          ]}
+          onPress={() => {
+            setOwnershipDropdownOpen(!ownershipDropdownOpen);
+            setTypeDropdownOpen(false);
+          }}
+        >
+          <Text
+            style={[
+              styles.filterButtonText,
+              ownershipFilter !== "all" && { color: colors.accent },
+            ]}
+          >
+            {ownershipLabel} ▾
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Dropdown */}
-      {dropdownOpen && (
+      {/* Type Dropdown */}
+      {typeDropdownOpen && (
         <View style={styles.dropdown}>
-          <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled>
+          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
             <TouchableOpacity
               style={styles.dropdownItem}
               onPress={() => {
                 setSelectedType(null);
-                setDropdownOpen(false);
+                setTypeDropdownOpen(false);
               }}
             >
               <Text
@@ -137,7 +198,7 @@ export default function PokemonListScreen({ navigation }: any) {
                 style={styles.dropdownItem}
                 onPress={() => {
                   setSelectedType(type);
-                  setDropdownOpen(false);
+                  setTypeDropdownOpen(false);
                 }}
               >
                 <View
@@ -163,6 +224,38 @@ export default function PokemonListScreen({ navigation }: any) {
         </View>
       )}
 
+      {/* Ownership Dropdown */}
+      {ownershipDropdownOpen && (
+        <View style={styles.dropdown}>
+          {(["all", "owned", "unowned"] as OwnershipFilter[]).map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              style={styles.dropdownItem}
+              onPress={() => {
+                setOwnershipFilter(opt);
+                setOwnershipDropdownOpen(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.dropdownItemText,
+                  ownershipFilter === opt && {
+                    color: colors.accent,
+                    fontWeight: "bold",
+                  },
+                ]}
+              >
+                {opt === "all"
+                  ? "All"
+                  : opt === "owned"
+                    ? "✓ Owned"
+                    : "✗ Unowned"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* Count */}
       <Text style={styles.countText}>{filtered.length} Pokémon</Text>
 
@@ -178,14 +271,14 @@ export default function PokemonListScreen({ navigation }: any) {
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           numColumns={2}
           contentContainerStyle={{ padding: 12, gap: 12 }}
           columnWrapperStyle={{ gap: 12 }}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View style={[styles.card, item.owned && styles.cardOwned]}>
               <View style={styles.typeBadges}>
-                {item.pk_types?.map((t: string) => (
+                {item.types.map((t) => (
                   <View
                     key={t}
                     style={[
@@ -204,13 +297,23 @@ export default function PokemonListScreen({ navigation }: any) {
                   </View>
                 ))}
               </View>
+
               <Image
-                source={{ uri: item.pk_front_image }}
-                style={styles.sprite}
+                source={{
+                  uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${item.id}.gif`,
+                }}
+                style={[styles.sprite, !item.owned && styles.spriteUnowned]}
                 resizeMode="contain"
               />
-              <Text style={styles.pokeName}>{item.pk_name}</Text>
-              <Text style={styles.pokeLevel}>Lv. {item.pk_level}</Text>
+              <Text style={styles.pokeName}>{item.name}</Text>
+
+              {item.owned ? (
+                <View style={styles.ownedBadge}>
+                  <Text style={styles.ownedBadgeText}>✓ Owned</Text>
+                </View>
+              ) : (
+                <Text style={styles.unownedText}>Not owned</Text>
+              )}
             </View>
           )}
         />
@@ -221,7 +324,7 @@ export default function PokemonListScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.addButton}
           onPress={() =>
-            navigation.navigate("SelectPokemon", { team: pokemon })
+            navigation.navigate("SelectPokemon", { team: ownedPokemon })
           }
         >
           <Text style={styles.addButtonText}>+ Add Pokémon</Text>
@@ -264,13 +367,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     justifyContent: "center",
   },
   filterButtonText: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     textTransform: "capitalize",
   },
 
@@ -297,11 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textTransform: "capitalize",
   },
-  typeColorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
+  typeColorDot: { width: 10, height: 10, borderRadius: 5 },
 
   countText: {
     paddingHorizontal: 16,
@@ -324,6 +423,9 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: "center",
   },
+  cardOwned: {
+    borderColor: colors.accent + "88",
+  },
   typeBadges: {
     flexDirection: "row",
     gap: 4,
@@ -333,6 +435,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   badgeText: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase" },
   sprite: { width: 90, height: 90 },
+  spriteUnowned: { opacity: 0.25 },
   pokeName: {
     color: colors.textPrimary,
     fontWeight: "bold",
@@ -340,7 +443,15 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
     marginTop: 4,
   },
-  pokeLevel: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  ownedBadge: {
+    backgroundColor: colors.accent + "33",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  ownedBadgeText: { color: colors.accent, fontSize: 10, fontWeight: "bold" },
+  unownedText: { color: colors.textMuted, fontSize: 10, marginTop: 4 },
 
   bottomContainer: {
     padding: 16,
