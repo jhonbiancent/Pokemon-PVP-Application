@@ -1,4 +1,9 @@
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { Text, TouchableOpacity } from "react-native";
+import { colors } from "../theme/color";
+
+const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
 export default function BattleButton({
   label,
@@ -9,15 +14,26 @@ export default function BattleButton({
   width = "48%",
   height = "46%",
 }: any) {
+  const player = useAudioPlayer(clickSound);
+  player.volume = 1.0;
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    player.play();
+    if (onPress) onPress();
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       style={{
         width: width,
         height: height,
         margin: "1%",
-        backgroundColor: disabled ? "#030712" : "#0A0D2E",
+        backgroundColor: disabled ? "#030712" : colors.bgButtonSecondary,
+        borderWidth: 1,
+        borderColor: colors.border,
         borderRadius: 12,
         justifyContent: "center",
         alignItems: "center",

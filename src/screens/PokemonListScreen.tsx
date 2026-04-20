@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { gen1Pokemon } from "../data/gen1Pokemon";
+import { gen2Pokemon } from "../data/gen2Pokemon";
 import { usePokemonList } from "../hooks/usePokemonList";
 import { colors } from "../theme/color";
 
@@ -35,6 +36,23 @@ const ALL_TYPES = [
   "ghost",
   "steel",
 ];
+
+const REGIONS = [
+  "Kanto",
+  "Johto",
+  "Hoenn",
+  "Sinnoh",
+  "Unova",
+  "Kalos",
+  "Alola",
+  "Galar",
+  "Paldea",
+];
+
+const REGION_DATA: Record<string, any[]> = {
+  Kanto: gen1Pokemon,
+  Johto: gen2Pokemon,
+};
 
 const TYPE_COLORS: Record<string, string> = {
   fire: "#FF6B35",
@@ -65,8 +83,10 @@ export default function PokemonListScreen({ navigation }: any) {
 
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState("Kanto");
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [ownershipDropdownOpen, setOwnershipDropdownOpen] = useState(false);
+  const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [ownershipFilter, setOwnershipFilter] =
     useState<OwnershipFilter>("all");
 
@@ -76,15 +96,14 @@ export default function PokemonListScreen({ navigation }: any) {
     [ownedPokemon],
   );
 
-  // Merge gen1 list with owned status
-  const mergedList = useMemo(
-    () =>
-      gen1Pokemon.map((p) => ({
-        ...p,
-        owned: ownedNames.has(p.name.toLowerCase()),
-      })),
-    [ownedNames],
-  );
+  // Merge selected region list with owned status
+  const mergedList = useMemo(() => {
+    const regionList = REGION_DATA[selectedRegion] ?? [];
+    return regionList.map((p) => ({
+      ...p,
+      owned: ownedNames.has(p.name.toLowerCase()),
+    }));
+  }, [ownedNames, selectedRegion]);
 
   const filtered = useMemo(() => {
     return mergedList.filter((p) => {
@@ -106,6 +125,20 @@ export default function PokemonListScreen({ navigation }: any) {
     unowned: "Unowned",
   }[ownershipFilter];
 
+  const handleNextPage = () => {
+    const currentIndex = REGIONS.indexOf(selectedRegion);
+    if (currentIndex < REGIONS.length - 1) {
+      setSelectedRegion(REGIONS[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevPage = () => {
+    const currentIndex = REGIONS.indexOf(selectedRegion);
+    if (currentIndex > 0) {
+      setSelectedRegion(REGIONS[currentIndex - 1]);
+    }
+  };
+
   if (loading)
     return (
       <View style={styles.loadingContainer}>
@@ -122,10 +155,11 @@ export default function PokemonListScreen({ navigation }: any) {
           placeholder="Search Pokémon..."
           placeholderTextColor={colors.textMuted}
           value={search}
-          onChangeText={(t) => {
+          onChangeText={(t: string) => {
             setSearch(t);
             setTypeDropdownOpen(false);
             setOwnershipDropdownOpen(false);
+            setRegionDropdownOpen(false);
           }}
         />
 
@@ -138,6 +172,7 @@ export default function PokemonListScreen({ navigation }: any) {
           onPress={() => {
             setTypeDropdownOpen(!typeDropdownOpen);
             setOwnershipDropdownOpen(false);
+            setRegionDropdownOpen(false);
           }}
         >
           <Text
@@ -159,6 +194,7 @@ export default function PokemonListScreen({ navigation }: any) {
           onPress={() => {
             setOwnershipDropdownOpen(!ownershipDropdownOpen);
             setTypeDropdownOpen(false);
+            setRegionDropdownOpen(false);
           }}
         >
           <Text
@@ -171,6 +207,52 @@ export default function PokemonListScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Region Selector Row - NOW BELOW SEARCH */}
+      <View style={styles.regionRow}>
+        <TouchableOpacity
+          style={styles.regionFilterButton}
+          onPress={() => {
+            setRegionDropdownOpen(!regionDropdownOpen);
+            setTypeDropdownOpen(false);
+            setOwnershipDropdownOpen(false);
+          }}
+        >
+          <Text style={styles.regionFilterButtonText}>
+            Region: {selectedRegion} ▾
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Region Dropdown */}
+      {regionDropdownOpen && (
+        <View style={styles.dropdown}>
+          <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
+            {REGIONS.map((region) => (
+              <TouchableOpacity
+                key={region}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setSelectedRegion(region);
+                  setRegionDropdownOpen(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    selectedRegion === region && {
+                      color: colors.accent,
+                      fontWeight: "bold",
+                    },
+                  ]}
+                >
+                  {region}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Type Dropdown */}
       {typeDropdownOpen && (
@@ -263,9 +345,15 @@ export default function PokemonListScreen({ navigation }: any) {
       {filtered.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyTitle}>No Pokémon found</Text>
+          <Text style={styles.emptyTitle}>
+            {REGION_DATA[selectedRegion]
+              ? "No Pokémon found"
+              : "Region data coming soon!"}
+          </Text>
           <Text style={styles.emptySubtitle}>
-            Try a different search or filter
+            {REGION_DATA[selectedRegion]
+              ? "Try a different search or filter"
+              : `We are still gathering data for ${selectedRegion}`}
           </Text>
         </View>
       ) : (
@@ -316,6 +404,35 @@ export default function PokemonListScreen({ navigation }: any) {
               )}
             </View>
           )}
+          ListFooterComponent={
+            <View style={styles.paginationRow}>
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  REGIONS.indexOf(selectedRegion) === 0 &&
+                    styles.disabledButton,
+                ]}
+                onPress={handlePrevPage}
+                disabled={REGIONS.indexOf(selectedRegion) === 0}
+              >
+                <Text style={styles.pageButtonText}>← Previous</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  REGIONS.indexOf(selectedRegion) === REGIONS.length - 1 &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleNextPage}
+                disabled={
+                  REGIONS.indexOf(selectedRegion) === REGIONS.length - 1
+                }
+              >
+                <Text style={styles.pageButtonText}>Next →</Text>
+              </TouchableOpacity>
+            </View>
+          }
         />
       )}
 
@@ -341,6 +458,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.bg,
+  },
+
+  regionRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
+  regionFilterButton: {
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  regionFilterButtonText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "bold",
   },
 
   searchRow: {
@@ -409,10 +545,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 50,
+  },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: "bold", color: colors.textPrimary },
-  emptySubtitle: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
+  emptySubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+    textAlign: "center",
+    paddingHorizontal: 20,
+  },
 
   card: {
     flex: 1,
@@ -453,6 +600,31 @@ const styles = StyleSheet.create({
   ownedBadgeText: { color: colors.accent, fontSize: 10, fontWeight: "bold" },
   unownedText: { color: colors.textMuted, fontSize: 10, marginTop: 4 },
 
+  paginationRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    gap: 12,
+  },
+  pageButton: {
+    flex: 1,
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  pageButtonText: {
+    color: colors.accent,
+    fontWeight: "bold",
+  },
+  disabledButton: {
+    borderColor: colors.border,
+    opacity: 0.5,
+  },
+
   bottomContainer: {
     padding: 16,
     paddingBottom: 32,
@@ -462,6 +634,8 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: colors.accent,
+    borderColor: colors.border,
+    borderWidth: 1,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",

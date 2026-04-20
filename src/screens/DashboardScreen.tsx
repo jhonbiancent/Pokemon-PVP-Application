@@ -61,7 +61,7 @@ export default function DashboardScreen({ navigation }: any) {
             navigation.replace("Login");
           }}
         >
-          <Text style={styles.logoutButtonText}>⏻</Text>
+          <Text style={styles.logoutButtonText}>Log out</Text>
         </TouchableOpacity>
       </View>
 
