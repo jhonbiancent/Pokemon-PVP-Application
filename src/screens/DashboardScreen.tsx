@@ -98,9 +98,9 @@ export default function DashboardScreen({ navigation }: any) {
           {team.length < 6 && (
             <TouchableOpacity
               style={styles.addButton}
-              onPress={() => navigation.navigate("SelectPokemon", { team })}
+              onPress={() => navigation.navigate("PokemonList")}
             >
-              <Text style={styles.addButtonText}>+ Add</Text>
+              <Text style={styles.addButtonText}>View All</Text>
             </TouchableOpacity>
           )}
         </View>

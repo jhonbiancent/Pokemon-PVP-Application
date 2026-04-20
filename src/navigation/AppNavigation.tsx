@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import BattleScreen from "@/src/screens/BattleScreen";
 import DashboardScreen from "@/src/screens/DashboardScreen";
 import LoginScreen from "@/src/screens/LoginScreen";
+import PokemonListScreen from "@/src/screens/PokemonListScreen";
 import SelectPokemonScreen from "@/src/screens/SelectPokemonScreen";
 import SignupScreen from "@/src/screens/SignupScreen";
 
@@ -61,6 +62,16 @@ export default function AppNavigator() {
               headerTintColor: "#F9FAFB",
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
             }}
+          />
+          <Stack.Screen
+            name="PokemonList"
+            options={{
+              title: "My Pokemon",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+            component={PokemonListScreen}
           />
         </>
       )}
