@@ -1,80 +1,143 @@
 import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import BattleButton from "./battleButton";
 
+type Move = {
+  name: string;
+  power: number;
+  type?: string;
+  pp?: number;
+  maxPp?: number;
+};
+
 type Props = {
-  moves: any[];
+  moves: Move[];
   onMovePress: (index: number) => void;
   disabled: boolean;
 };
 
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+
+const ACTION_CONFIG = [
+  {
+    label: "Fight",
+    icon: <FontAwesome5 name="fist-raised" size={14} color="white" />,
+    accent: "#E2C96B",
+  },
+  {
+    label: "Pokémon",
+    icon: <Ionicons name="ellipse" size={14} color="white" />,
+    accent: "#EF5350",
+  },
+  {
+    label: "Bag",
+    icon: <FontAwesome5 name="shopping-bag" size={14} color="white" />,
+    accent: "#66BB6A",
+  },
+  {
+    label: "Run",
+    icon: <FontAwesome5 name="running" size={14} color="white" />,
+    accent: "#4FC3F7",
+  },
+];
 export default function BattleActions({ moves, onMovePress, disabled }: Props) {
   const [menu, setMenu] = useState<"main" | "fight">("main");
 
   if (menu === "main") {
     return (
       <View style={styles.container}>
-        <BattleButton
-          label="Fight"
-          onPress={() => setMenu("fight")}
-          disabled={disabled}
-          color="#FCC060" // Orange
-        />
-        <BattleButton
-          label="Pokemon"
-          onPress={() => {}}
-          disabled={disabled}
-          color="#4CAF50" // Green
-        />
-        <BattleButton
-          label="Bag"
-          onPress={() => {}}
-          disabled={disabled}
-          color="#2196F3" // Blue
-        />
-        <BattleButton
-          label="Run"
-          onPress={() => {}}
-          disabled={disabled}
-          color="#F44336" //
-        />
+        {/* Scanline overlay hint */}
+        <View style={styles.header}>
+          <Text style={styles.headerText}>▶ WHAT WILL</Text>
+          <Text style={styles.headerTextBold}>PLAYER DO?</Text>
+        </View>
+        <View style={styles.grid}>
+          {ACTION_CONFIG.map((action) => (
+            <BattleButton
+              key={action.label}
+              label={action.label}
+              icon={action.icon} // pass icon as a prop
+              onPress={
+                action.label === "Fight" ? () => setMenu("fight") : () => {}
+              }
+              disabled={disabled}
+              variant="action"
+            />
+          ))}
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {moves.map((move, i) => (
+      <View style={styles.header}>
+        <Text style={styles.headerText}>▶ CHOOSE A</Text>
+        <Text style={styles.headerTextBold}>MOVE</Text>
+      </View>
+      <View style={styles.grid}>
+        {moves.map((move, i) => (
+          <BattleButton
+            key={i}
+            label={move.name}
+            subLabel={`PWR ${move.power}  PP ${move.pp ?? "—"}/${move.maxPp ?? "—"}`}
+            moveType={move.type}
+            onPress={() => onMovePress(i)}
+            disabled={disabled}
+            variant="move"
+            height="40%"
+          />
+        ))}
         <BattleButton
-          key={i}
-          label={move.name}
-          subLabel={`Pwr: ${move.power}`}
-          onPress={() => onMovePress(i)}
+          label="← Back"
+          onPress={() => setMenu("main")}
           disabled={disabled}
-          height="31%" // 3 rows
+          variant="back"
+          width="98%"
+          height="18%"
         />
-      ))}
-      <BattleButton
-        label="Back"
-        onPress={() => setMenu("main")}
-        disabled={disabled}
-        width="98%"
-        height="31%"
-      />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    width: "100%",
+    height: 280,
+    backgroundColor: "#080B14",
+    borderTopWidth: 2,
+    borderTopColor: "#6bdae233",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 2,
+    gap: 6,
+  },
+  headerText: {
+    fontFamily: "monospace",
+    fontSize: 9,
+    color: "#555",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  headerTextBold: {
+    fontFamily: "monospace",
+    fontSize: 11,
+    color: "#E2C96B",
+    fontWeight: "900",
+    letterSpacing: 2,
+  },
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    width: "100%",
-    height: 160,
-    backgroundColor: "#B2F7A1",
-    padding: 6,
-    paddingBottom: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 60,
     justifyContent: "space-between",
     alignContent: "space-between",
+    flex: 1,
   },
 });

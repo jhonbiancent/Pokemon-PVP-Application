@@ -8,22 +8,13 @@ import { getRandomMove } from "../battle/ai";
 import { dealDamage, isGameOver } from "../battle/battleEngine";
 import { BattleState } from "../battle/battleTypes";
 
-import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import { setAudioModeAsync } from "expo-audio";
 
-const playCry = async (url: string) => {
-  try {
-    const player = createAudioPlayer({ uri: url });
-    await player.play();
-  } catch (e) {
-    console.log("Cry error:", e);
-  }
-};
 export default function BattleScreen({ route }: any) {
   const { player, enemy } = route.params;
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true });
-    playCry(enemy.cry);
   }, []);
 
   const [state, setState] = useState<BattleState>({
@@ -45,20 +36,21 @@ export default function BattleScreen({ route }: any) {
     // 1. Player Turn
     const move = state.player.moves[index];
 
+    // Initial delay before starting the attack sequence
+    await delay(1500);
+
     // Show "Player used..."
-    await delay(500);
     setState((s) => ({
       ...s,
       log: [...s.log, `Player used ${move.name}!`],
     }));
-    playCry(state.player.cry);
 
-    // Trigger Attack Animation (Move toward opponent)
-    await delay(500);
+    // Wait 1.5s after showing the log before moving
+    await delay(1500);
     setState((s) => ({ ...s, attackingSide: "player" }));
 
     // Wait for movement to "hit", then trigger Hit Animation (Shake) + Damage
-    await delay(400); // Wait for move animation to reach opponent
+    await delay(400); // Animation duration
     setState((s) => ({ ...s, hitSide: "enemy", attackingSide: null }));
 
     const newEnemyHp = dealDamage(state.enemy.hp, move);
@@ -81,20 +73,19 @@ export default function BattleScreen({ route }: any) {
     setState(afterPlayerAttack);
 
     // 2. Enemy Turn
-    await delay(1000); // Pause between turns
+    await delay(1500); // Pause between turns
     const enemyMove = getRandomMove(state.enemy);
 
     // Show "Enemy used..."
     setState((s) => ({ ...s, turn: "enemy" }));
-    await delay(500);
+    await delay(1500); // Delay before enemy starts attack sequence
     setState((s) => ({
       ...s,
       log: [...s.log, `Enemy used ${enemyMove.name}!`],
     }));
-    playCry(state.enemy.cry);
 
-    // Trigger Attack Animation
-    await delay(500);
+    // Wait 1.5s after enemy log
+    await delay(1500);
     setState((s) => ({ ...s, attackingSide: "enemy" }));
 
     // Trigger Hit + Damage
@@ -119,7 +110,7 @@ export default function BattleScreen({ route }: any) {
       style={{
         flex: 1,
         justifyContent: "space-between",
-        backgroundColor: "white",
+        backgroundColor: "#1F2937",
       }}
     >
       <View
@@ -142,6 +133,7 @@ export default function BattleScreen({ route }: any) {
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
+                color: "white",
               }}
             >
               {l}

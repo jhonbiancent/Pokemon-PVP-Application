@@ -88,12 +88,15 @@ export default function PokemonCard({
           [isBack ? "right" : "left"]: 10,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <Text style={{ fontWeight: "bold", fontSize: 14 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={{ fontWeight: "bold", fontSize: 14, color: "white" }}>
             {pokemon.name.toUpperCase()}
           </Text>
-          <Text style={{ fontSize: 14 }}> lvl {pokemon.level}</Text>
-        </div>
+          <Text style={{ fontSize: 14, color: "white" }}>
+            {" "}
+            lvl {pokemon.level}
+          </Text>
+        </View>
 
         <HpBar hp={pokemon.hp} maxHp={pokemon.maxHp} />
       </View>
@@ -110,8 +113,8 @@ export default function PokemonCard({
         <Image
           source={{ uri: imageSource }}
           style={{
-            width: isBack ? 200 : 100,
-            height: isBack ? 200 : 100,
+            width: isBack ? 180 : 100,
+            height: isBack ? 180 : 100,
             resizeMode: "contain",
           }}
         />

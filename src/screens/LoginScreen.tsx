@@ -1,7 +1,12 @@
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Button,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,6 +16,10 @@ import {
 import StatusModal from "../components/statusModal";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { colors } from "../theme/color";
+
+const clickSound = require("../../assets/sounds/buttonClick.mp3");
+const logo = require("../../assets/images/icon.png");
 
 export default function LoginScreen({ navigation }: any) {
   const [username, setUsername] = useState("");
@@ -25,7 +34,16 @@ export default function LoginScreen({ navigation }: any) {
 
   const { login } = useAuth();
 
+  const player = useAudioPlayer(clickSound);
+  player.volume = 1.0;
+
+  const playClick = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    player.play();
+  };
+
   const handleLogin = async () => {
+    playClick();
     if (!username || !password) {
       setModalMessage("Please enter username and password");
       setModalType("error");
@@ -71,39 +89,64 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login to Pokemon PVP</Text>
-
-      <TextInput
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-        style={styles.input}
-      />
-
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Button title="Log In" onPress={handleLogin} />
-      )}
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate("Signup")}
-        style={{ marginTop: 20 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={{ color: "blue", textAlign: "center" }}>
-          Don't have an account? Sign Up
-        </Text>
-      </TouchableOpacity>
+        <View style={styles.logoContainer}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.title}>Pokemon Clash</Text>
+          <Text style={styles.subtitle}>Contest of Champions</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <TextInput
+            placeholder="Username"
+            placeholderTextColor="#6B7280"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            style={styles.input}
+          />
+
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#6B7280"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
+
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.disabledButton]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.loginButtonText}>Log In</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              playClick();
+              navigation.navigate("Signup");
+            }}
+            style={styles.signupLink}
+          >
+            <Text style={styles.signupText}>
+              Don't have an account? <Text style={styles.signupHighlight}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       <StatusModal
         visible={modalVisible}
@@ -113,32 +156,89 @@ export default function LoginScreen({ navigation }: any) {
           setModalVisible(false);
 
           if (modalType === "success") {
-            navigation.replace("Home");
+            navigation.replace("Dashboard");
           }
         }}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "#030712",
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
-    backgroundColor: "white",
+    padding: 24,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 48,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#F9FAFB",
     textAlign: "center",
-    marginBottom: 30,
+    letterSpacing: 1,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#818CF8",
+    textAlign: "center",
+    fontWeight: "600",
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  formContainer: {
+    width: "100%",
   },
   input: {
+    backgroundColor: "#111827",
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
+    borderColor: "#1F2937",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    color: "white",
+    fontSize: 16,
+  },
+  loginButton: {
+    backgroundColor: "#0A0D2E",
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#1F2937",
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  loginButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+  signupLink: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  signupText: {
+    color: "#9CA3AF",
+    fontSize: 15,
+  },
+  signupHighlight: {
+    color: "#818CF8",
+    fontWeight: "bold",
   },
 });

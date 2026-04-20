@@ -9,7 +9,7 @@ export default function MoveButton({ move, onPress, disabled }: any) {
         width: "48%", // Grid of 2
         height: "46%", // Grid of 2 (with small gap)
         margin: "1%",
-        backgroundColor: disabled ? "#ccc" : "#eee",
+        backgroundColor: disabled ? "#030712" : "#030712",
         borderRadius: 12,
         justifyContent: "center",
         alignItems: "center",
