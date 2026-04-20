@@ -153,7 +153,15 @@ export default function DashboardScreen({ navigation }: any) {
           numColumns={2}
           contentContainerStyle={{ padding: 12, gap: 12 }}
           columnWrapperStyle={{ gap: 12 }}
-          renderItem={({ item }) => <PokemonCard pokemon={item} />}
+          renderItem={({ item }) => (
+            <PokemonCard
+              pokemon={item}
+              onPress={() => {
+                playClick();
+                navigation.navigate("PokemonStats", { pokemon: item });
+              }}
+            />
+          )}
         />
       )}
       <View style={styles.battleContainer}>

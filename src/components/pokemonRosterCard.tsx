@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Pokemon } from "../types/pokemon";
 
 const TYPE_COLORS: Record<string, string> = {
@@ -24,14 +24,19 @@ const TYPE_COLORS: Record<string, string> = {
 
 type Props = {
   pokemon: Pokemon;
+  onPress?: () => void;
 };
 
-export default function PokemonRosterCard({ pokemon }: Props) {
+export default function PokemonRosterCard({ pokemon, onPress }: Props) {
   const primaryType = pokemon.type[0];
   const accentColor = TYPE_COLORS[primaryType] ?? "#888";
 
   return (
-    <View style={[styles.card, { borderColor: accentColor + "55" }]}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={[styles.card, { borderColor: accentColor + "55" }]}
+    >
       {/* Glow background circle */}
       <View style={[styles.glow, { backgroundColor: accentColor + "22" }]} />
 
@@ -80,7 +85,7 @@ export default function PokemonRosterCard({ pokemon }: Props) {
       </Text>
 
       <Text style={styles.level}>Lv. {pokemon.level}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
