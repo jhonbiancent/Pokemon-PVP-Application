@@ -12,12 +12,25 @@ import { useAuth } from "../context/AuthContext";
 import { getPokemon } from "../hooks/usePokemon";
 import { useTeam } from "../hooks/useTeam";
 import { colors } from "../theme/color";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
+
+const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
 export default function DashboardScreen({ navigation }: any) {
   const { user, signOut } = useAuth();
   const { team, loading, refetch } = useTeam(user?.id ?? "");
 
+  const player = useAudioPlayer(clickSound);
+  player.volume = 1.0;
+
+  const playClick = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    player.play();
+  };
+
   const handleBattle = async () => {
+    playClick();
     if (team.length === 0) {
       Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
       return;
@@ -40,7 +53,7 @@ export default function DashboardScreen({ navigation }: any) {
         <ActivityIndicator color="#818CF8" size="large" />
       </View>
     );
-  console.log("team[0] moves:", JSON.stringify(team[0]?.moves));
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -57,6 +70,7 @@ export default function DashboardScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => {
+            playClick();
             signOut();
             navigation.replace("Login");
           }}
@@ -91,14 +105,23 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>My Pokémon Team</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => {
+              playClick();
+              refetch();
+            }}
+          >
             <Text style={styles.refreshButtonText}>↻</Text>
           </TouchableOpacity>
 
           {team.length < 6 && (
             <TouchableOpacity
               style={styles.addButton}
-              onPress={() => navigation.navigate("PokemonList")}
+              onPress={() => {
+                playClick();
+                navigation.navigate("PokemonList");
+              }}
             >
               <Text style={styles.addButtonText}>View All</Text>
             </TouchableOpacity>
@@ -115,7 +138,10 @@ export default function DashboardScreen({ navigation }: any) {
           </Text>
           <TouchableOpacity
             style={styles.emptyButton}
-            onPress={() => navigation.navigate("SelectPokemon", { team })}
+            onPress={() => {
+              playClick();
+              navigation.navigate("SelectPokemon", { team });
+            }}
           >
             <Text style={styles.emptyButtonText}>Add your first Pokémon</Text>
           </TouchableOpacity>
@@ -147,7 +173,10 @@ export default function DashboardScreen({ navigation }: any) {
             styles.exploreButton,
             team.length === 0 && styles.battleButtonDisabled,
           ]}
-          onPress={handleBattle}
+          onPress={() => {
+            playClick();
+            handleBattle();
+          }}
           disabled={team.length === 0}
         >
           <Text style={styles.battleButtonText}>Explore</Text>

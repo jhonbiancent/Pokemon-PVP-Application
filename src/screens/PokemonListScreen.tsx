@@ -15,6 +15,10 @@ import { gen1Pokemon } from "../data/gen1Pokemon";
 import { gen2Pokemon } from "../data/gen2Pokemon";
 import { usePokemonList } from "../hooks/usePokemonList";
 import { colors } from "../theme/color";
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
+
+const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
 const ALL_TYPES = [
   "fire",
@@ -90,6 +94,14 @@ export default function PokemonListScreen({ navigation }: any) {
   const [ownershipFilter, setOwnershipFilter] =
     useState<OwnershipFilter>("all");
 
+  const player = useAudioPlayer(clickSound);
+  player.volume = 1.0;
+
+  const playClick = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    player.play();
+  };
+
   // Build owned names set for O(1) lookup
   const ownedNames = useMemo(
     () => new Set(ownedPokemon.map((p) => p.pk_name.toLowerCase())),
@@ -126,6 +138,7 @@ export default function PokemonListScreen({ navigation }: any) {
   }[ownershipFilter];
 
   const handleNextPage = () => {
+    playClick();
     const currentIndex = REGIONS.indexOf(selectedRegion);
     if (currentIndex < REGIONS.length - 1) {
       setSelectedRegion(REGIONS[currentIndex + 1]);
@@ -133,6 +146,7 @@ export default function PokemonListScreen({ navigation }: any) {
   };
 
   const handlePrevPage = () => {
+    playClick();
     const currentIndex = REGIONS.indexOf(selectedRegion);
     if (currentIndex > 0) {
       setSelectedRegion(REGIONS[currentIndex - 1]);
@@ -170,6 +184,7 @@ export default function PokemonListScreen({ navigation }: any) {
             selectedType && { borderColor: TYPE_COLORS[selectedType] },
           ]}
           onPress={() => {
+            playClick();
             setTypeDropdownOpen(!typeDropdownOpen);
             setOwnershipDropdownOpen(false);
             setRegionDropdownOpen(false);
@@ -192,6 +207,7 @@ export default function PokemonListScreen({ navigation }: any) {
             ownershipFilter !== "all" && { borderColor: colors.accent },
           ]}
           onPress={() => {
+            playClick();
             setOwnershipDropdownOpen(!ownershipDropdownOpen);
             setTypeDropdownOpen(false);
             setRegionDropdownOpen(false);
@@ -213,6 +229,7 @@ export default function PokemonListScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.regionFilterButton}
           onPress={() => {
+            playClick();
             setRegionDropdownOpen(!regionDropdownOpen);
             setTypeDropdownOpen(false);
             setOwnershipDropdownOpen(false);
@@ -233,6 +250,7 @@ export default function PokemonListScreen({ navigation }: any) {
                 key={region}
                 style={styles.dropdownItem}
                 onPress={() => {
+                  playClick();
                   setSelectedRegion(region);
                   setRegionDropdownOpen(false);
                 }}
@@ -261,6 +279,7 @@ export default function PokemonListScreen({ navigation }: any) {
             <TouchableOpacity
               style={styles.dropdownItem}
               onPress={() => {
+                playClick();
                 setSelectedType(null);
                 setTypeDropdownOpen(false);
               }}
@@ -279,6 +298,7 @@ export default function PokemonListScreen({ navigation }: any) {
                 key={type}
                 style={styles.dropdownItem}
                 onPress={() => {
+                  playClick();
                   setSelectedType(type);
                   setTypeDropdownOpen(false);
                 }}
@@ -314,6 +334,7 @@ export default function PokemonListScreen({ navigation }: any) {
               key={opt}
               style={styles.dropdownItem}
               onPress={() => {
+                playClick();
                 setOwnershipFilter(opt);
                 setOwnershipDropdownOpen(false);
               }}
@@ -440,9 +461,10 @@ export default function PokemonListScreen({ navigation }: any) {
       <View style={styles.bottomContainer}>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() =>
-            navigation.navigate("SelectPokemon", { team: ownedPokemon })
-          }
+          onPress={() => {
+            playClick();
+            navigation.navigate("SelectPokemon", { team: ownedPokemon });
+          }}
         >
           <Text style={styles.addButtonText}>+ Add Pokémon</Text>
         </TouchableOpacity>

@@ -31,13 +31,22 @@ export default function AppNavigator() {
             name="Login"
             component={LoginScreen}
             options={{
-              title: "LOGIN ",
+              title: "",
               headerStyle: { backgroundColor: "#111827" },
               headerTintColor: "#F9FAFB",
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
             }}
           />
-          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen
+            name="Signup"
+            options={{
+              title: "",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+            component={SignupScreen}
+          />
         </>
       ) : (
         // App Flow
@@ -46,7 +55,7 @@ export default function AppNavigator() {
             name="Dashboard"
             component={DashboardScreen}
             options={{
-              title: "DASHBOARD",
+              title: "",
               headerStyle: { backgroundColor: "#111827" },
               headerTintColor: "#F9FAFB",
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
