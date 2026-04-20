@@ -26,7 +26,16 @@ export default function AppNavigator() {
       {!user ? (
         // Auth Flow
         <>
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{
+              title: "LOGIN ",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+          />
           <Stack.Screen name="Signup" component={SignupScreen} />
         </>
       ) : (
@@ -47,7 +56,7 @@ export default function AppNavigator() {
             name="Battle"
             component={BattleScreen}
             options={{
-              title: "DASHBOARD",
+              title: "BATTLE",
               headerStyle: { backgroundColor: "#111827" },
               headerTintColor: "#F9FAFB",
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },

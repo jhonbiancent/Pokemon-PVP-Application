@@ -1,22 +1,22 @@
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import PokemonCard from "../components/pokemonRosterCard";
 import { useAuth } from "../context/AuthContext";
 import { getPokemon } from "../hooks/usePokemon";
 import { useTeam } from "../hooks/useTeam";
+import { colors } from "../theme/color";
 
 export default function DashboardScreen({ navigation }: any) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { team, loading, refetch } = useTeam(user?.id ?? "");
 
-  // Add this function inside DashboardScreen
   const handleBattle = async () => {
     if (team.length === 0) {
       Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
@@ -24,9 +24,9 @@ export default function DashboardScreen({ navigation }: any) {
     }
 
     try {
-      const enemy = await getPokemon("charmander", 12); // or random enemy
+      const enemy = await getPokemon("Blastoise", 40);
       navigation.navigate("Battle", {
-        player: team[0], // first pokemon in roster
+        player: team[0],
         enemy,
       });
     } catch (e) {
@@ -40,7 +40,7 @@ export default function DashboardScreen({ navigation }: any) {
         <ActivityIndicator color="#818CF8" size="large" />
       </View>
     );
-
+  console.log("team[0] moves:", JSON.stringify(team[0]?.moves));
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -49,9 +49,20 @@ export default function DashboardScreen({ navigation }: any) {
           <Text style={styles.greeting}>Welcome back,</Text>
           <Text style={styles.username}>{user?.name ?? "Trainer"} 👋</Text>
         </View>
+
         <View style={styles.trainerBadge}>
           <Text style={styles.trainerBadgeText}>🏅 Trainer</Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => {
+            signOut();
+            navigation.replace("Login");
+          }}
+        >
+          <Text style={styles.logoutButtonText}>⏻</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Stats Bar */}
@@ -80,7 +91,6 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>My Pokémon Team</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          {/* 👇 Refresh button */}
           <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
             <Text style={styles.refreshButtonText}>↻</Text>
           </TouchableOpacity>
@@ -131,13 +141,24 @@ export default function DashboardScreen({ navigation }: any) {
         >
           <Text style={styles.battleButtonText}>Battle</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.exploreButton,
+            team.length === 0 && styles.battleButtonDisabled,
+          ]}
+          onPress={handleBattle}
+          disabled={team.length === 0}
+        >
+          <Text style={styles.battleButtonText}>Explore</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#030712" },
+  container: { flex: 1, backgroundColor: colors.bg },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -192,12 +213,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#F9FAFB" },
   addButton: {
-    backgroundColor: "#818CF8",
+    backgroundColor: colors.bgButton,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
+    justifyContent: "center",
   },
-  addButtonText: { color: "white", fontWeight: "bold", fontSize: 13 },
+  addButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
 
   emptyContainer: {
     flex: 1,
@@ -244,8 +270,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#030712",
     borderTopWidth: 1,
     borderTopColor: "#1F2937",
+    flexDirection: "row",
+    gap: 10,
   },
   battleButton: {
+    flex: 1,
     backgroundColor: "#0A0D2E",
     paddingVertical: 16,
     borderRadius: 16,
@@ -260,4 +289,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: 1,
   },
+  exploreButton: {
+    flex: 1,
+    backgroundColor: "#0A0D2E",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  logoutButton: {
+    backgroundColor: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  logoutButtonText: { color: "#EF4444", fontWeight: "bold", fontSize: 16 },
 });

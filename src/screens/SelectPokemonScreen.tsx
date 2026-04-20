@@ -23,7 +23,7 @@ export default function SelectPokemonScreen({ navigation, route }: any) {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      const result = await getPokemon(search.toLowerCase().trim(), 12);
+      const result = await getPokemon(search.toLowerCase().trim(), 40);
       setPokemon(result);
     } catch (e) {
       Alert.alert(

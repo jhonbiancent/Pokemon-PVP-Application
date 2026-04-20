@@ -142,6 +142,7 @@ export default function BattleScreen({ route }: any) {
               style={{
                 textAlign: "center",
                 fontWeight: "bold",
+                color: "white",
               }}
             >
               {l}

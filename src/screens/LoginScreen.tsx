@@ -126,13 +126,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "white",
+    backgroundColor: "#030712",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 30,
+    color: "white",
   },
   input: {
     borderWidth: 1,
@@ -140,5 +141,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 15,
+    color: "white",
   },
 });
