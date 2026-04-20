@@ -113,7 +113,7 @@ export default function LoginScreen({ navigation }: any) {
           setModalVisible(false);
 
           if (modalType === "success") {
-            navigation.replace("Home");
+            navigation.replace("Dashboard");
           }
         }}
       />
