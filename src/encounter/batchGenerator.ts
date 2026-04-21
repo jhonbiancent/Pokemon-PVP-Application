@@ -1,19 +1,14 @@
-import type {
-  EncounterTable,
-  GeneratedEncounter,
-  QueueEntry,
-} from "./types";
-import { weightedPickMany } from "./weightedPicker";
-import { generateLevel, generateShiny } from "./generators";
-import { fetchBatch } from "./fetchWithCache";
-import { buildFallback } from "./fetchWithCache";
+import { generateLevel, generateShiny } from "@/src/encounter/generators";
+import { weightedPickMany } from "@/src/encounter/weightedPicker";
+import { buildFallback, fetchBatch } from "./fetchWithCache";
+import type { EncounterTable, GeneratedEncounter, QueueEntry } from "./types";
 
 /**
  * Region/area → encounter table registry.
  * Extend this as you add more regions and tables.
  */
-import { gen1Cave, gen1Grass, gen1Water, gen1Forest } from "./gen1/tables";
-import { gen2Cave, gen2Grass, gen2Water, gen2Forest } from "./gen2/tables";
+import { gen1Cave, gen1Forest, gen1Grass, gen1Water } from "./gen1/tables";
+import { gen2Cave, gen2Forest, gen2Grass, gen2Water } from "./gen2/tables";
 
 export type Region = "gen1" | "gen2";
 export type Area = "cave" | "grass" | "water" | "forest";
