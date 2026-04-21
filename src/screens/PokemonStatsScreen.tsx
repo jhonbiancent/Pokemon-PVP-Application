@@ -2,18 +2,16 @@ import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { colors } from "../theme/color";
-import { supabase } from "../lib/supabase";
 import StatusModal from "../components/statusModal";
+import { supabase } from "../lib/supabase";
 
 import { PokemonStatsScreenProps } from "../types/navigation";
 
@@ -40,7 +38,10 @@ const TYPE_COLORS: Record<string, string> = {
   steel: "#78909C",
 };
 
-export default function PokemonStatsScreen({ route, navigation }: PokemonStatsScreenProps) {
+export default function PokemonStatsScreen({
+  route,
+  navigation,
+}: PokemonStatsScreenProps) {
   const { pokemon } = route.params;
   const primaryType = pokemon.type[0];
   const accentColor = TYPE_COLORS[primaryType] ?? "#888";
@@ -65,8 +66,8 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
     setIsReleasing(true);
 
     try {
-      // Supabase CASCADE delete should handle moves if set up, 
-      // but we'll just delete the pokemon. 
+      // Supabase CASCADE delete should handle moves if set up,
+      // but we'll just delete the pokemon.
       const { error } = await supabase
         .from("pokemon")
         .delete()
@@ -86,14 +87,25 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
     }
   };
 
-  const StatRow = ({ label, value, color }: { label: string; value: number; color: string }) => (
+  const StatRow = ({
+    label,
+    value,
+    color,
+  }: {
+    label: string;
+    value: number;
+    color: string;
+  }) => (
     <View style={styles.statRow}>
       <Text style={styles.statLabel}>{label}</Text>
       <View style={styles.statBarBg}>
         <View
           style={[
             styles.statBarFill,
-            { width: `${Math.min((value / 255) * 100, 100)}%`, backgroundColor: color },
+            {
+              width: `${Math.min((value / 255) * 100, 100)}%`,
+              backgroundColor: color,
+            },
           ]}
         />
       </View>
@@ -105,8 +117,12 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header / Image Section */}
-        <View style={[styles.imageContainer, { borderColor: accentColor + "44" }]}>
-          <View style={[styles.glow, { backgroundColor: accentColor + "22" }]} />
+        <View
+          style={[styles.imageContainer, { borderColor: accentColor + "44" }]}
+        >
+          <View
+            style={[styles.glow, { backgroundColor: accentColor + "22" }]}
+          />
           <Image
             source={{ uri: pokemon.frontImage }}
             style={styles.sprite}
@@ -122,7 +138,12 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
                   { backgroundColor: (TYPE_COLORS[t] ?? "#888") + "33" },
                 ]}
               >
-                <Text style={[styles.badgeText, { color: TYPE_COLORS[t] ?? "#888" }]}>
+                <Text
+                  style={[
+                    styles.badgeText,
+                    { color: TYPE_COLORS[t] ?? "#888" },
+                  ]}
+                >
                   {t}
                 </Text>
               </View>
@@ -136,9 +157,21 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
           <Text style={styles.sectionTitle}>Stats</Text>
           <StatRow label="HP" value={pokemon.maxHp} color="#FF5959" />
           <StatRow label="Attack" value={pokemon.attack || 0} color="#F08030" />
-          <StatRow label="Defense" value={pokemon.defense || 0} color="#F8D030" />
-          <StatRow label="Sp. Atk" value={pokemon.specialAttack || 0} color="#6890F0" />
-          <StatRow label="Sp. Def" value={pokemon.specialDefense || 0} color="#78C850" />
+          <StatRow
+            label="Defense"
+            value={pokemon.defense || 0}
+            color="#F8D030"
+          />
+          <StatRow
+            label="Sp. Atk"
+            value={pokemon.specialAttack || 0}
+            color="#6890F0"
+          />
+          <StatRow
+            label="Sp. Def"
+            value={pokemon.specialDefense || 0}
+            color="#78C850"
+          />
           <StatRow label="Speed" value={pokemon.speed || 0} color="#F85888" />
         </View>
 
@@ -187,11 +220,12 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Release Pokemon?</Text>
             <Text style={styles.modalMessage}>
-              Are you sure you want to release your {pokemon.name.toUpperCase()}? This action cannot be undone.
+              Are you sure you want to release your {pokemon.name.toUpperCase()}
+              ? This action cannot be undone.
             </Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.cancelButton} 
+              <TouchableOpacity
+                style={styles.cancelButton}
                 onPress={() => {
                   playClick();
                   setConfirmVisible(false);
@@ -199,8 +233,8 @@ export default function PokemonStatsScreen({ route, navigation }: PokemonStatsSc
               >
                 <Text style={styles.cancelButtonText}>No, Keep it</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.confirmButton} 
+              <TouchableOpacity
+                style={styles.confirmButton}
                 onPress={handleRelease}
               >
                 <Text style={styles.confirmButtonText}>Yes, Release</Text>
@@ -365,6 +399,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#030712",
     borderTopWidth: 1,
     borderTopColor: "#1F2937",
+    paddingBottom: 70,
   },
   footerButtons: {
     flexDirection: "row",

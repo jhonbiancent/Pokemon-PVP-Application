@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   refreshButtonText: { color: "#9CA3AF", fontWeight: "bold", fontSize: 16 },
   battleContainer: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 70,
     backgroundColor: "#030712",
     borderTopWidth: 1,
     borderTopColor: "#1F2937",
