@@ -15,6 +15,8 @@ import { colors } from "../theme/color";
 import { supabase } from "../lib/supabase";
 import StatusModal from "../components/statusModal";
 
+import { PokemonStatsScreenProps } from "../types/navigation";
+
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
 const TYPE_COLORS: Record<string, string> = {
@@ -38,7 +40,7 @@ const TYPE_COLORS: Record<string, string> = {
   steel: "#78909C",
 };
 
-export default function PokemonStatsScreen({ route, navigation }: any) {
+export default function PokemonStatsScreen({ route, navigation }: PokemonStatsScreenProps) {
   const { pokemon } = route.params;
   const primaryType = pokemon.type[0];
   const accentColor = TYPE_COLORS[primaryType] ?? "#888";
@@ -84,7 +86,7 @@ export default function PokemonStatsScreen({ route, navigation }: any) {
     }
   };
 
-  const StatRow = ({ label, value, color }: any) => (
+  const StatRow = ({ label, value, color }: { label: string; value: number; color: string }) => (
     <View style={styles.statRow}>
       <Text style={styles.statLabel}>{label}</Text>
       <View style={styles.statBarBg}>

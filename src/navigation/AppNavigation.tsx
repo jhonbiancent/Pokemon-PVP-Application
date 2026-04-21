@@ -10,8 +10,9 @@ import PokemonStatsScreen from "@/src/screens/PokemonStatsScreen";
 import PokemonTeamScreen from "@/src/screens/PokemonTeamScreen";
 import SelectPokemonScreen from "@/src/screens/SelectPokemonScreen";
 import SignupScreen from "@/src/screens/SignupScreen";
+import { RootStackParamList } from "../types/navigation"; // adjust path as needed
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   const { user, loading } = useAuth();

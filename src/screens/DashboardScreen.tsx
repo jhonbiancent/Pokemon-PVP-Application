@@ -1,3 +1,6 @@
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
+import React from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,12 +15,11 @@ import { useAuth } from "../context/AuthContext";
 import { getPokemon } from "../hooks/usePokemon";
 import { useTeam } from "../hooks/useTeam";
 import { colors } from "../theme/color";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
+import { DashboardScreenProps } from "../types/navigation";
 
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
-export default function DashboardScreen({ navigation }: any) {
+export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { user, signOut } = useAuth();
   const { team, loading, refetch } = useTeam(user?.id ?? "");
 
@@ -105,18 +107,8 @@ export default function DashboardScreen({ navigation }: any) {
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Pokémon Team</Text>
+        <Text style={styles.sectionTitle}>Pokémon Team</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
-            style={styles.configureButton}
-            onPress={() => {
-              playClick();
-              navigation.navigate("PokemonTeam", { initialTeam: team });
-            }}
-          >
-            <Text style={styles.configureButtonText}>Configure</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.refreshButton}
             onPress={() => {
@@ -127,17 +119,28 @@ export default function DashboardScreen({ navigation }: any) {
             <Text style={styles.refreshButtonText}>↻</Text>
           </TouchableOpacity>
 
-          {team.length < 6 && (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => {
-                playClick();
-                navigation.navigate("PokemonList");
-              }}
-            >
-              <Text style={styles.addButtonText}>View All</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.configureButton}
+            onPress={() => {
+              playClick();
+              navigation.navigate("PokemonTeam", {
+                initialTeam: team,
+                onSave: refetch,
+              });
+            }}
+          >
+            <Text style={styles.configureButtonText}>Configure</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              playClick();
+              navigation.navigate("PokemonList");
+            }}
+          >
+            <Text style={styles.addButtonText}>View All</Text>
+          </TouchableOpacity>
         </View>
       </View>
 

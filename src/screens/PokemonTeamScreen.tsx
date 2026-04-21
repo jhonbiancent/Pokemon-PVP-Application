@@ -1,22 +1,33 @@
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
+  LayoutAnimation,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
+  UIManager,
   View,
-  ActivityIndicator,
 } from "react-native";
-import { colors } from "../theme/color";
-import { supabase } from "../lib/supabase";
 import StatusModal from "../components/statusModal";
+import { supabase } from "../lib/supabase";
+import { colors } from "../theme/color";
+import { PokemonTeamScreenProps } from "../types/navigation";
 import { Pokemon } from "../types/pokemon";
 
-const clickSound = require("../../assets/sounds/buttonClick.mp3");
+// Enable LayoutAnimation for Android
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
+const clickSound = require("../../assets/sounds/buttonClick.mp3");
 const TYPE_COLORS: Record<string, string> = {
   fire: "#FF6B35",
   water: "#4FC3F7",
@@ -38,8 +49,11 @@ const TYPE_COLORS: Record<string, string> = {
   steel: "#78909C",
 };
 
-export default function PokemonTeamScreen({ route, navigation }: any) {
-  const { initialTeam } = route.params;
+export default function PokemonTeamScreen({
+  route,
+  navigation,
+}: PokemonTeamScreenProps) {
+  const { initialTeam, onSave } = route.params;
   const [team, setTeam] = useState<Pokemon[]>(initialTeam);
   const [isSaving, setIsSaving] = useState(false);
   const [statusVisible, setStatusVisible] = useState(false);
@@ -49,13 +63,22 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
   const player = useAudioPlayer(clickSound);
   player.volume = 1.0;
 
-  const playClick = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const playClick = (type: "light" | "medium" | "success" = "medium") => {
+    if (type === "light")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    else if (type === "medium")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    else if (type === "success")
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
     player.play();
   };
 
   const swap = (index1: number, index2: number) => {
-    playClick();
+    playClick("light");
+    // Animate the reordering
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
     const newTeam = [...team];
     const temp = newTeam[index1];
     newTeam[index1] = newTeam[index2];
@@ -64,24 +87,19 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
   };
 
   const handleSave = async () => {
-    playClick();
+    playClick("medium");
     setIsSaving(true);
 
     try {
-      // Execute updates in parallel for each pokemon to update its order
       const updatePromises = team.map((p, index) =>
-        supabase
-          .from("pokemon")
-          .update({ pk_order: index })
-          .eq("id", p.id)
+        supabase.from("pokemon").update({ pk_order: index }).eq("id", p.id),
       );
 
       const results = await Promise.all(updatePromises);
-      
-      // Check if any of the updates failed
       const firstError = results.find((r) => r.error)?.error;
       if (firstError) throw firstError;
 
+      playClick("success");
       setStatusMessage("Team order saved successfully!");
       setStatusType("success");
       setStatusVisible(true);
@@ -92,6 +110,7 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
     } finally {
       setIsSaving(false);
     }
+    onSave?.();
   };
 
   const renderItem = ({ item, index }: { item: Pokemon; index: number }) => {
@@ -99,18 +118,78 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
     const accentColor = TYPE_COLORS[primaryType] ?? "#888";
 
     return (
-      <View style={[styles.card, { borderColor: accentColor + "55" }]}>
-        <View style={[styles.orderBadge, { backgroundColor: accentColor }]}>
-          <Text style={styles.orderBadgeText}>#{index + 1}</Text>
-        </View>
-
-        <Image
-          source={{ uri: item.frontImage }}
-          style={styles.sprite}
-          resizeMode="contain"
+      <View style={[styles.card, { borderColor: accentColor + "44" }]}>
+        {/* Glow effect based on type */}
+        <View
+          style={[
+            styles.glowEffect,
+            { backgroundColor: accentColor, opacity: 0.05 },
+          ]}
         />
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.level}>Lv. {item.level}</Text>
+
+        <TouchableOpacity
+          style={styles.cardClickArea}
+          onPress={() => {
+            playClick("light");
+            navigation.navigate("PokemonStats", { pokemon: item });
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.orderBadge, { backgroundColor: accentColor }]}>
+            <Text style={styles.orderBadgeText}>#{index + 1}</Text>
+          </View>
+
+          <Image
+            source={{ uri: item.frontImage }}
+            style={styles.sprite}
+            resizeMode="contain"
+          />
+
+          {/* Type badges */}
+          <View style={styles.typeBadges}>
+            {item.type.map((t) => (
+              <View
+                key={t}
+                style={[
+                  styles.badge,
+                  { backgroundColor: (TYPE_COLORS[t] ?? "#888") + "33" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.badgeText,
+                    { color: TYPE_COLORS[t] ?? "#888" },
+                  ]}
+                >
+                  {t}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <Text style={styles.name}>{item.name}</Text>
+
+          {/* HP Bar */}
+          <View style={styles.hpBarBg}>
+            <View
+              style={[
+                styles.hpBarFill,
+                {
+                  width: `${(item.hp / item.maxHp) * 100}%`,
+                  backgroundColor: accentColor,
+                },
+              ]}
+            />
+          </View>
+          <View style={styles.hpTextRow}>
+            <Text style={styles.hpLabel}>HP</Text>
+            <Text style={styles.hpValue}>
+              {item.hp}/{item.maxHp}
+            </Text>
+          </View>
+
+          <Text style={styles.level}>Lv. {item.level}</Text>
+        </TouchableOpacity>
 
         <View style={styles.controls}>
           <TouchableOpacity
@@ -124,15 +203,20 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
           <TouchableOpacity
             disabled={index === team.length - 1}
             onPress={() => swap(index, index + 1)}
-            style={[styles.arrowButton, index === team.length - 1 && styles.disabledArrow]}
+            style={[
+              styles.arrowButton,
+              index === team.length - 1 && styles.disabledArrow,
+            ]}
           >
             <Text style={styles.arrowText}>→</Text>
           </TouchableOpacity>
         </View>
-        
+
         {index === 0 && (
-          <View style={styles.battleTag}>
-            <Text style={styles.battleTagText}>STARTER</Text>
+          <View style={[styles.battleTag, { borderColor: accentColor + "88" }]}>
+            <Text style={[styles.battleTagText, { color: accentColor }]}>
+              STARTER
+            </Text>
           </View>
         )}
       </View>
@@ -143,7 +227,8 @@ export default function PokemonTeamScreen({ route, navigation }: any) {
     <View style={styles.container}>
       <View style={styles.headerInfo}>
         <Text style={styles.infoText}>
-          The #1 Pokémon will be your first in battle. Use the arrows to reorder your team.
+          The #1 Pokémon will be your first in battle. Tap a card to see stats
+          or use arrows to reorder.
         </Text>
       </View>
 
@@ -212,53 +297,121 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: "#111827",
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 20,
+    borderWidth: 1.5,
     padding: 12,
     alignItems: "center",
     position: "relative",
     overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
   },
-  orderBadge: {
+  glowEffect: {
     position: "absolute",
     top: 0,
     left: 0,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderBottomRightRadius: 12,
+    right: 0,
+    bottom: 0,
+  },
+  cardClickArea: {
+    width: "100%",
+    alignItems: "center",
+  },
+  orderBadge: {
+    position: "absolute",
+    top: -12,
+    left: -12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderBottomRightRadius: 16,
     zIndex: 10,
   },
   orderBadgeText: {
     color: "white",
-    fontWeight: "bold",
-    fontSize: 12,
+    fontWeight: "900",
+    fontSize: 14,
   },
   sprite: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
+  },
+  typeBadges: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 4,
+    justifyContent: "center",
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
   name: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: 16,
     textTransform: "capitalize",
+    marginTop: 6,
+  },
+  hpBarBg: {
+    width: "100%",
+    height: 6,
+    backgroundColor: "#374151",
+    borderRadius: 3,
+    marginTop: 10,
+    overflow: "hidden",
+  },
+  hpBarFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  hpTextRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
     marginTop: 4,
+    paddingHorizontal: 2,
+  },
+  hpLabel: {
+    color: "#6B7280",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  hpValue: {
+    color: "#9CA3AF",
+    fontSize: 10,
+    fontWeight: "600",
   },
   level: {
-    color: "#6B7280",
-    fontSize: 11,
-    marginBottom: 10,
+    color: "#818CF8",
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 4,
+    marginBottom: 8,
   },
   controls: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 5,
+    gap: 16,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#1F2937",
+    paddingTop: 12,
+    width: "100%",
+    justifyContent: "center",
   },
   arrowButton: {
     backgroundColor: "#1F2937",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -266,46 +419,53 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
   },
   disabledArrow: {
-    opacity: 0.2,
+    opacity: 0.1,
   },
   battleTag: {
-    marginTop: 10,
-    backgroundColor: "#818CF833",
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#111827CC",
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#818CF855",
   },
   battleTagText: {
-    color: "#818CF8",
-    fontSize: 9,
-    fontWeight: "bold",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
   footer: {
     padding: 20,
-    paddingBottom: 32,
+    paddingBottom: 36,
     borderTopWidth: 1,
     borderTopColor: "#1F2937",
     backgroundColor: "#030712",
   },
   saveButton: {
     backgroundColor: "#818CF8",
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 18,
+    borderRadius: 20,
     alignItems: "center",
+    shadowColor: "#818CF8",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   disabledButton: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   saveButtonText: {
     color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    letterSpacing: 1,
+    fontWeight: "900",
+    fontSize: 18,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
 });
