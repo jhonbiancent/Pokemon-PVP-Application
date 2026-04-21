@@ -11,8 +11,12 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { savePokemon } from "../hooks/savePokemon";
 import { getPokemon } from "../hooks/usePokemon";
+import { SelectPokemonScreenProps } from "../types/navigation";
 
-export default function SelectPokemonScreen({ navigation, route }: any) {
+export default function SelectPokemonScreen({
+  navigation,
+  route,
+}: SelectPokemonScreenProps) {
   const { team } = route.params; // current team passed from Dashboard
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,7 +27,7 @@ export default function SelectPokemonScreen({ navigation, route }: any) {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      const result = await getPokemon(search.toLowerCase().trim(), 40);
+      const result = await getPokemon(search.toLowerCase().trim(), 100);
       setPokemon(result);
     } catch (e) {
       Alert.alert(

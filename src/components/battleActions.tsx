@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingHorizontal: 10,
-    paddingBottom: 60,
+    paddingBottom: 70,
     justifyContent: "space-between",
     alignContent: "space-between",
     flex: 1,

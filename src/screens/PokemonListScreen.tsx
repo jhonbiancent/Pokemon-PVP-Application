@@ -1,3 +1,5 @@
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,8 +17,6 @@ import { gen1Pokemon } from "../data/gen1Pokemon";
 import { gen2Pokemon } from "../data/gen2Pokemon";
 import { usePokemonList } from "../hooks/usePokemonList";
 import { colors } from "../theme/color";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
 
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
 
   bottomContainer: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 70,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.bg,

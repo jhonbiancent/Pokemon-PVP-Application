@@ -9,3 +9,11 @@ export async function fetchPokemon(name: string) {
 
   return res.json();
 }
+
+export async function fetchMoveDetail(url: string) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    return null;
+  }
+  return res.json();
+}

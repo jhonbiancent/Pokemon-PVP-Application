@@ -21,9 +21,8 @@ export function useTeam(userId: string) {
       .from("pokemon")
       .select(`*, pokemon_moves(*)`)
       .eq("user_id", userId)
+      .order("pk_order", { ascending: true })
       .order("created_at", { ascending: true });
-    console.log("team data:", data);
-    console.log("team error:", error);
 
     if (error) {
       console.error(error);
@@ -32,10 +31,17 @@ export function useTeam(userId: string) {
     }
 
     const mapped: Pokemon[] = data.map((p: any) => ({
+      id: p.id,
+      pk_order: p.pk_order,
       name: p.pk_name,
       level: p.pk_level,
       hp: p.pk_hp,
       maxHp: p.pk_max_hp,
+      attack: p.pk_attack || 0,
+      defense: p.pk_defense || 0,
+      specialAttack: p.pk_special_attack || 0,
+      specialDefense: p.pk_special_defense || 0,
+      speed: p.pk_speed || 0,
       type: p.pk_types,
       frontImage: p.pk_front_image,
       backImage: p.pk_back_image,

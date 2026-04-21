@@ -1,3 +1,6 @@
+import { useAudioPlayer } from "expo-audio";
+import * as Haptics from "expo-haptics";
+import React from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,12 +15,11 @@ import { useAuth } from "../context/AuthContext";
 import { getPokemon } from "../hooks/usePokemon";
 import { useTeam } from "../hooks/useTeam";
 import { colors } from "../theme/color";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
+import { DashboardScreenProps } from "../types/navigation";
 
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
-export default function DashboardScreen({ navigation }: any) {
+export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const { user, signOut } = useAuth();
   const { team, loading, refetch } = useTeam(user?.id ?? "");
 
@@ -37,9 +39,11 @@ export default function DashboardScreen({ navigation }: any) {
     }
 
     try {
+      // The first pokemon in the sorted list is our starter
+      const playerPokemon = team[0];
       const enemy = await getPokemon("Blastoise", 40);
       navigation.navigate("Battle", {
-        player: team[0],
+        player: playerPokemon,
         enemy,
       });
     } catch (e) {
@@ -103,7 +107,7 @@ export default function DashboardScreen({ navigation }: any) {
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Pokémon Team</Text>
+        <Text style={styles.sectionTitle}>Pokémon Team</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <TouchableOpacity
             style={styles.refreshButton}
@@ -115,17 +119,28 @@ export default function DashboardScreen({ navigation }: any) {
             <Text style={styles.refreshButtonText}>↻</Text>
           </TouchableOpacity>
 
-          {team.length < 6 && (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => {
-                playClick();
-                navigation.navigate("PokemonList");
-              }}
-            >
-              <Text style={styles.addButtonText}>View All</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.configureButton}
+            onPress={() => {
+              playClick();
+              navigation.navigate("PokemonTeam", {
+                initialTeam: team,
+                onSave: refetch,
+              });
+            }}
+          >
+            <Text style={styles.configureButtonText}>Configure</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              playClick();
+              navigation.navigate("PokemonList");
+            }}
+          >
+            <Text style={styles.addButtonText}>View All</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -153,7 +168,15 @@ export default function DashboardScreen({ navigation }: any) {
           numColumns={2}
           contentContainerStyle={{ padding: 12, gap: 12 }}
           columnWrapperStyle={{ gap: 12 }}
-          renderItem={({ item }) => <PokemonCard pokemon={item} />}
+          renderItem={({ item }) => (
+            <PokemonCard
+              pokemon={item}
+              onPress={() => {
+                playClick();
+                navigation.navigate("PokemonStats", { pokemon: item });
+              }}
+            />
+          )}
         />
       )}
       <View style={styles.battleContainer}>
@@ -253,6 +276,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 13,
   },
+  configureButton: {
+    backgroundColor: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  configureButtonText: { color: "#818CF8", fontWeight: "bold", fontSize: 13 },
 
   emptyContainer: {
     flex: 1,
@@ -295,7 +327,7 @@ const styles = StyleSheet.create({
   refreshButtonText: { color: "#9CA3AF", fontWeight: "bold", fontSize: 16 },
   battleContainer: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 70,
     backgroundColor: "#030712",
     borderTopWidth: 1,
     borderTopColor: "#1F2937",

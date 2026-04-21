@@ -6,10 +6,13 @@ import BattleScreen from "@/src/screens/BattleScreen";
 import DashboardScreen from "@/src/screens/DashboardScreen";
 import LoginScreen from "@/src/screens/LoginScreen";
 import PokemonListScreen from "@/src/screens/PokemonListScreen";
+import PokemonStatsScreen from "@/src/screens/PokemonStatsScreen";
+import PokemonTeamScreen from "@/src/screens/PokemonTeamScreen";
 import SelectPokemonScreen from "@/src/screens/SelectPokemonScreen";
 import SignupScreen from "@/src/screens/SignupScreen";
+import { RootStackParamList } from "../types/navigation"; // adjust path as needed
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   const { user, loading } = useAuth();
@@ -81,6 +84,26 @@ export default function AppNavigator() {
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
             }}
             component={PokemonListScreen}
+          />
+          <Stack.Screen
+            name="PokemonStats"
+            options={{
+              title: "Pokemon Stats",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+            component={PokemonStatsScreen}
+          />
+          <Stack.Screen
+            name="PokemonTeam"
+            options={{
+              title: "Manage Team",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+            component={PokemonTeamScreen}
           />
         </>
       )}
