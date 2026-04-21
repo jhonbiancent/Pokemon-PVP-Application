@@ -7,6 +7,7 @@ import DashboardScreen from "@/src/screens/DashboardScreen";
 import LoginScreen from "@/src/screens/LoginScreen";
 import PokemonListScreen from "@/src/screens/PokemonListScreen";
 import PokemonStatsScreen from "@/src/screens/PokemonStatsScreen";
+import PokemonTeamScreen from "@/src/screens/PokemonTeamScreen";
 import SelectPokemonScreen from "@/src/screens/SelectPokemonScreen";
 import SignupScreen from "@/src/screens/SignupScreen";
 
@@ -92,6 +93,16 @@ export default function AppNavigator() {
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
             }}
             component={PokemonStatsScreen}
+          />
+          <Stack.Screen
+            name="PokemonTeam"
+            options={{
+              title: "Manage Team",
+              headerStyle: { backgroundColor: "#111827" },
+              headerTintColor: "#F9FAFB",
+              headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
+            }}
+            component={PokemonTeamScreen}
           />
         </>
       )}

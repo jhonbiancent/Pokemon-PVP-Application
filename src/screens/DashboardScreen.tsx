@@ -37,9 +37,11 @@ export default function DashboardScreen({ navigation }: any) {
     }
 
     try {
+      // The first pokemon in the sorted list is our starter
+      const playerPokemon = team[0];
       const enemy = await getPokemon("Blastoise", 40);
       navigation.navigate("Battle", {
-        player: team[0],
+        player: playerPokemon,
         enemy,
       });
     } catch (e) {
@@ -105,6 +107,16 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>My Pokémon Team</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
+          <TouchableOpacity
+            style={styles.configureButton}
+            onPress={() => {
+              playClick();
+              navigation.navigate("PokemonTeam", { initialTeam: team });
+            }}
+          >
+            <Text style={styles.configureButtonText}>Configure</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.refreshButton}
             onPress={() => {
@@ -261,6 +273,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 13,
   },
+  configureButton: {
+    backgroundColor: "#1F2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  configureButtonText: { color: "#818CF8", fontWeight: "bold", fontSize: 13 },
 
   emptyContainer: {
     flex: 1,

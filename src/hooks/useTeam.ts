@@ -21,9 +21,8 @@ export function useTeam(userId: string) {
       .from("pokemon")
       .select(`*, pokemon_moves(*)`)
       .eq("user_id", userId)
+      .order("pk_order", { ascending: true })
       .order("created_at", { ascending: true });
-    console.log("team data:", data);
-    console.log("team error:", error);
 
     if (error) {
       console.error(error);
@@ -33,6 +32,7 @@ export function useTeam(userId: string) {
 
     const mapped: Pokemon[] = data.map((p: any) => ({
       id: p.id,
+      pk_order: p.pk_order,
       name: p.pk_name,
       level: p.pk_level,
       hp: p.pk_hp,
