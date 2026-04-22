@@ -1,3 +1,4 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import React from "react";
@@ -62,64 +63,87 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.username}>{user?.name ?? "Trainer"} 👋</Text>
+          <Text style={styles.greeting}>Welcome back</Text>
+
+          <Text style={styles.username}>
+            {user?.name ?? "Trainer"}{" "}
+            <Text style={{ color: "#818CF8" }}>✦</Text>
+          </Text>
+
+          <Text style={{ color: "#6B7280", fontSize: 12, marginTop: 2 }}>
+            Ready for your next battle?
+          </Text>
         </View>
 
-        <View style={styles.trainerBadge}>
-          <Text style={styles.trainerBadgeText}>🏅 Trainer</Text>
-        </View>
+        <View style={styles.headerRight}>
+          <View style={styles.trainerBadge}>
+            <Ionicons name="ribbon" size={14} color="#818CF8" />
+            <Text style={styles.trainerBadgeText}>Elite Trainer</Text>
+          </View>
 
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            playClick();
-            signOut();
-            navigation.replace("Login");
-          }}
-        >
-          <Text style={styles.logoutButtonText}>Log out</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => {
+              playClick();
+              signOut();
+              navigation.replace("Login");
+            }}
+          >
+            <Ionicons name="log-out-outline" size={16} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats Bar */}
       <View style={styles.statsBar}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{team.length}/6</Text>
-          <Text style={styles.statLabel}>Team Size</Text>
-        </View>
+        <StatItem
+          icon="account-group"
+          label="Team"
+          value={`${team.length}/6`}
+          color="#818CF8"
+        />
+
         <View style={styles.statDivider} />
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>
-            {team.length > 0 ? Math.max(...team.map((p) => p.level)) : 0}
-          </Text>
-          <Text style={styles.statLabel}>Highest Lv.</Text>
-        </View>
+
+        <StatItem
+          icon="trending-up"
+          label="Top Lv."
+          value={team.length > 0 ? Math.max(...team.map((p) => p.level)) : 0}
+          color="#34d399"
+        />
+
         <View style={styles.statDivider} />
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>
-            {[...new Set(team.flatMap((p) => p.type))].length}
-          </Text>
-          <Text style={styles.statLabel}>Types</Text>
-        </View>
+
+        <StatItem
+          icon="shape-outline"
+          label="Types"
+          value={[...new Set(team.flatMap((p) => p.type))].length}
+          color="#fbbf24"
+        />
       </View>
 
       {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Pokémon Team</Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity
-            style={styles.refreshButton}
+        {/* Title */}
+        <View>
+          <Text style={styles.sectionTitle}>Pokémon Team</Text>
+          <Text style={styles.sectionSub}>Manage your active party</Text>
+        </View>
+
+        {/* Actions */}
+        <View style={styles.headerActions}>
+          <IconButton
+            icon="refresh"
+            color="#9CA3AF"
             onPress={() => {
               playClick();
               refetch();
             }}
-          >
-            <Text style={styles.refreshButtonText}>↻</Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={styles.configureButton}
+          <IconButton
+            icon="pencil"
+            color="#818CF8"
             onPress={() => {
               playClick();
               navigation.navigate("PokemonTeam", {
@@ -127,31 +151,31 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
                 onSave: refetch,
               });
             }}
-          >
-            <Text style={styles.configureButtonText}>Configure</Text>
-          </TouchableOpacity>
+          />
 
-          <TouchableOpacity
-            style={styles.addButton}
+          <IconButton
+            icon="view-grid"
+            color="#34d399"
             onPress={() => {
               playClick();
               navigation.navigate("PokemonList", {
                 mode: "view",
               });
             }}
-          >
-            <Text style={styles.addButtonText}>View All</Text>
-          </TouchableOpacity>
+          />
         </View>
       </View>
 
       {team.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>⚡</Text>
-          <Text style={styles.emptyTitle}>No Pokémon yet!</Text>
+          <MaterialCommunityIcons name="pokeball" size={60} color="#818CF8" />
+
+          <Text style={styles.emptyTitle}>No Pokémon yet</Text>
+
           <Text style={styles.emptySubtitle}>
-            Start building your team by adding your first Pokémon.
+            Start your journey by recruiting your first team member.
           </Text>
+
           <TouchableOpacity
             style={styles.emptyButton}
             onPress={() => {
@@ -159,7 +183,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
               navigation.navigate("SelectPokemon", { team });
             }}
           >
-            <Text style={styles.emptyButtonText}>Add your first Pokémon</Text>
+            <Text style={styles.emptyButtonText}>Start Journey</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -180,29 +204,22 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
           )}
         />
       )}
-      <View style={styles.battleContainer}>
+      <View style={styles.actionDock}>
         <TouchableOpacity
-          style={[
-            styles.battleButton,
-            team.length === 0 && styles.battleButtonDisabled,
-          ]}
+          style={[styles.battleButton, team.length === 0 && styles.disabled]}
           onPress={handleBattle}
           disabled={team.length === 0}
         >
-          <Text style={styles.battleButtonText}>Battle</Text>
+          <Ionicons name="flash" size={18} color="white" />
+          <Text style={styles.actionText}>Battle</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.exploreButton,
-            team.length === 0 && styles.battleButtonDisabled,
-          ]}
+          style={[styles.exploreButton, team.length === 0 && styles.disabled]}
           onPress={() => {
             playClick();
-            if (team.length === 0) {
-              Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
-              return;
-            }
+            if (team.length === 0) return;
+
             const playerPokemon = team[0];
             navigation.navigate("RegionSelect", {
               player: playerPokemon,
@@ -210,7 +227,8 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
           }}
           disabled={team.length === 0}
         >
-          <Text style={styles.battleButtonText}>Explore</Text>
+          <Ionicons name="compass" size={18} color="white" />
+          <Text style={styles.actionText}>Explore</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -231,8 +249,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
     backgroundColor: "#030712",
   },
   greeting: { fontSize: 13, color: "#6B7280", letterSpacing: 0.5 },
@@ -264,13 +282,6 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 11, color: "#6B7280", marginTop: 2 },
   statDivider: { width: 1, height: 30, backgroundColor: "#1F2937" },
 
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
   sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#F9FAFB" },
   addButton: {
     backgroundColor: colors.bgButton,
@@ -342,13 +353,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
-  battleButton: {
-    flex: 1,
-    backgroundColor: "#0A0D2E",
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
+
   battleButtonDisabled: {
     backgroundColor: "#374151",
   },
@@ -358,13 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: 1,
   },
-  exploreButton: {
-    flex: 1,
-    backgroundColor: "#0A0D2E",
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
+
   logoutButton: {
     backgroundColor: "#1F2937",
     borderWidth: 1,
@@ -374,4 +373,124 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   logoutButtonText: { color: "#EF4444", fontWeight: "bold", fontSize: 16 },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  actionDock: {
+    flexDirection: "row",
+    gap: 10,
+    padding: 16,
+    paddingBottom: 70,
+    backgroundColor: "#030712",
+    borderTopWidth: 1,
+    borderTopColor: "#1F2937",
+  },
+
+  battleButton: {
+    flex: 1,
+    backgroundColor: "#4338ca",
+    paddingVertical: 14,
+    borderRadius: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  exploreButton: {
+    flex: 1,
+    backgroundColor: "#0ea5e9",
+    paddingVertical: 14,
+    borderRadius: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  actionText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  disabled: {
+    backgroundColor: "#374151",
+    opacity: 0.6,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+
+  sectionSub: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
+
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#111827",
+    borderWidth: 1,
+    borderColor: "#1F2937",
+    justifyContent: "center",
+    alignItems: "center",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
 });
+function IconButton({
+  icon,
+  onPress,
+  color,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  onPress: () => void;
+  color: string;
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.iconButton}>
+      <MaterialCommunityIcons name={icon} size={20} color={color} />
+    </TouchableOpacity>
+  );
+}
+function StatItem({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: string;
+  label: string;
+  value: string | number;
+  color: string;
+}) {
+  return (
+    <View style={{ alignItems: "center", flex: 1 }}>
+      <MaterialCommunityIcons name={icon as any} size={18} color={color} />
+      <Text style={{ fontSize: 18, fontWeight: "700", color, marginTop: 4 }}>
+        {value}
+      </Text>
+      <Text style={{ fontSize: 11, color: "#6B7280" }}>{label}</Text>
+    </View>
+  );
+}
