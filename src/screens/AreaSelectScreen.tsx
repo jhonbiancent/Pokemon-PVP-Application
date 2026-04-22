@@ -1,4 +1,5 @@
 import type { Area } from "@/src/encounter/batchGenerator";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Platform,
@@ -37,7 +38,7 @@ const AREAS: AreaConfig[] = [
     bgTop: "#1a3a10",
     bgBottom: "#0e2208",
     accent: "#5dc840",
-    icon: "🌿",
+    icon: "grass", // fallback not used
     difficulty: "easy",
     encounterRate: "Common",
   },
@@ -49,7 +50,7 @@ const AREAS: AreaConfig[] = [
     bgTop: "#0e2a14",
     bgBottom: "#081408",
     accent: "#40a840",
-    icon: "🌲",
+    icon: "pine-tree",
     difficulty: "medium",
     encounterRate: "Frequent",
   },
@@ -61,7 +62,7 @@ const AREAS: AreaConfig[] = [
     bgTop: "#1a1428",
     bgBottom: "#0c0a18",
     accent: "#8060d0",
-    icon: "🪨",
+    icon: "image-filter-hdr", // rock/cave vibe
     difficulty: "medium",
     encounterRate: "Moderate",
   },
@@ -73,7 +74,7 @@ const AREAS: AreaConfig[] = [
     bgTop: "#0a1e38",
     bgBottom: "#060e20",
     accent: "#2090e0",
-    icon: "🌊",
+    icon: "water",
     difficulty: "hard",
     encounterRate: "Rare finds",
   },
@@ -115,6 +116,12 @@ function AreaCard({
 }) {
   const [pressed, setPressed] = useState(false);
 
+  const difficultyColor = {
+    easy: "#22c55e",
+    medium: "#f59e0b",
+    hard: "#ef4444",
+  }[area.difficulty];
+
   return (
     <Pressable
       onPress={onPress}
@@ -124,28 +131,59 @@ function AreaCard({
         styles.areaCard,
         {
           transform: [{ scale: pressed ? 0.98 : 1 }],
-          borderColor: isSelected ? "#4a90e2" : "#222",
+          borderColor: isSelected ? area.accent : "#222",
+          backgroundColor: area.bgBottom,
         },
       ]}
     >
+      {/* Accent strip */}
+      <View style={[styles.areaAccent, { backgroundColor: area.accent }]} />
+
       <View style={styles.cardBody}>
+        {/* LEFT */}
         <View style={styles.cardLeft}>
-          <Text style={styles.areaName}>{area.label}</Text>
+          <View style={styles.areaHeader}>
+            <View style={[styles.iconBadge, { backgroundColor: area.bgTop }]}>
+              <MaterialCommunityIcons
+                name={area.icon as any}
+                size={18}
+                color={area.accent}
+              />
+            </View>
+
+            <Text style={styles.areaName}>{area.label}</Text>
+          </View>
+
           <Text style={styles.areaDesc}>{area.description}</Text>
 
-          {flavorText ? (
-            <Text style={styles.flavorText}>{flavorText}</Text>
-          ) : null}
+          {flavorText && <Text style={styles.flavorText}>{flavorText}</Text>}
+
+          {/* Difficulty */}
+          <View
+            style={[
+              styles.diffBadge,
+              { backgroundColor: difficultyColor + "22" },
+            ]}
+          >
+            <View
+              style={[styles.diffDot, { backgroundColor: difficultyColor }]}
+            />
+            <Text style={[styles.diffText, { color: difficultyColor }]}>
+              {DIFFICULTY_LABEL[area.difficulty]}
+            </Text>
+          </View>
         </View>
 
+        {/* RIGHT */}
         <View style={styles.cardRight}>
-          <Text style={styles.diffText}>
-            {DIFFICULTY_LABEL[area.difficulty]}
-          </Text>
-
-          <Text style={styles.encounterRate}>{area.encounterRate}</Text>
+          <View style={styles.rateBadge}>
+            <MaterialCommunityIcons name="pokeball" size={14} color="#9aa4b2" />
+            <Text style={styles.encounterRate}>{area.encounterRate}</Text>
+          </View>
 
           <Text style={styles.encounterHint}>{area.encounterHint}</Text>
+
+          <Ionicons name="chevron-forward" size={18} color="#6b7280" />
         </View>
       </View>
     </Pressable>
@@ -265,13 +303,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  areaCard: {
-    backgroundColor: "#111827",
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-  },
-
   cardBody: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -319,5 +350,65 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     textAlign: "right",
     maxWidth: 120,
+  },
+  areaAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+
+  areaHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+
+  iconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  diffBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    marginTop: 6,
+  },
+
+  diffDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  rateBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  areaCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    overflow: "hidden",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
 });
