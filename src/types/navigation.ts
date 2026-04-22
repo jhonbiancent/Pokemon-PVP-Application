@@ -7,6 +7,7 @@ export type RootStackParamList = {
   Dashboard: undefined;
   SelectPokemon: { team: Pokemon[] };
   Battle: { player: Pokemon; enemy: Pokemon };
+  EncounterFlow: { region: string; area: string; player: Pokemon; onExit: () => void; };
   PokemonList: undefined;
   PokemonStats: { pokemon: Pokemon };
   PokemonTeam: { initialTeam: Pokemon[]; onSave?: () => void };

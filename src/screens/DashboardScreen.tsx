@@ -198,7 +198,16 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
           ]}
           onPress={() => {
             playClick();
-            handleBattle();
+            if (team.length === 0) {
+              Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
+              return;
+            }
+            navigation.navigate("EncounterFlow", {
+              region: "kanto", // Example region
+              area: "grass", // Example area
+              player: team[0],
+              onExit: () => navigation.goBack(),
+            });
           }}
           disabled={team.length === 0}
         >

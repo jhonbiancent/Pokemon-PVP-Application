@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 import BattleScreen from "@/src/screens/BattleScreen";
 import DashboardScreen from "@/src/screens/DashboardScreen";
+import { EncounterFlow } from "@/src/screens/EncounterFlow";
 import LoginScreen from "@/src/screens/LoginScreen";
 import PokemonListScreen from "@/src/screens/PokemonListScreen";
 import PokemonStatsScreen from "@/src/screens/PokemonStatsScreen";
@@ -104,6 +105,11 @@ export default function AppNavigator() {
               headerTitleStyle: { fontWeight: "bold", fontSize: 18 },
             }}
             component={PokemonTeamScreen}
+          />
+          <Stack.Screen
+            name="EncounterFlow"
+            component={EncounterFlow}
+            options={{ headerShown: false }}
           />
         </>
       )}
