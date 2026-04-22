@@ -33,6 +33,7 @@ function mapEncounterToPokemon(encounter: EncounterPokemon): Pokemon {
     speed: calculateStat(encounter.baseStats.speed, encounter.level),
     frontImage: encounter.image,
     backImage: encounter.image,
+    isShiny: encounter.isShiny,
     moves: encounter.moves.map((m) => ({
       name: m.name,
       power: 40, // Default power for wild encounters since we don't fetch move details here

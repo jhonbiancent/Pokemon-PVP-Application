@@ -38,13 +38,16 @@ function getLocalData(id: number) {
 function hydrateEntry(entry: QueueEntry): EncounterPokemon {
   const local = getLocalData(entry.id);
 
+  const baseUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+  const image = entry.isShiny
+    ? `${baseUrl}/shiny/${entry.id}.png`
+    : `${baseUrl}/${entry.id}.png`;
+
   return {
     id: entry.id,
     name: local?.name ?? `pokemon-${entry.id}`,
     types: local?.types ?? ["normal"],
-    image:
-      local?.image ??
-      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${entry.id}.png`,
+    image: image,
     level: entry.level,
     isShiny: entry.isShiny,
     baseStats: entry.rawData.baseStats,
