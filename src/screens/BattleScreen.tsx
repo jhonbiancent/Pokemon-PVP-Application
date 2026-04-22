@@ -7,12 +7,19 @@ import PokemonCard from "../components/pokemonCard";
 import { getRandomMove } from "../battle/ai";
 import { dealDamage, isGameOver } from "../battle/battleEngine";
 import { BattleState } from "../battle/battleTypes";
+import { Pokemon } from "../types/pokemon";
+import { BattleScreenProps } from "../types/navigation";
 
 import { setAudioModeAsync } from "expo-audio";
 
-export default function BattleScreen({ route }: any) {
-  const { player, enemy } = route.params;
+interface BattleProps {
+  player: Pokemon;
+  enemy: Pokemon;
+  onBattleEnd?: (winner: "player" | "enemy") => void;
+  onRun?: () => void;
+}
 
+export function Battle({ player, enemy, onBattleEnd, onRun }: BattleProps) {
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true });
   }, []);
@@ -67,6 +74,7 @@ export default function BattleScreen({ route }: any) {
         ...afterPlayerAttack,
         winner: winnerAfterPlayer,
       });
+      if (onBattleEnd) onBattleEnd(winnerAfterPlayer);
       return;
     }
 
@@ -103,6 +111,7 @@ export default function BattleScreen({ route }: any) {
 
     const winnerAfterEnemy = isGameOver(afterEnemyAttack);
     setState({ ...afterEnemyAttack, winner: winnerAfterEnemy });
+    if (winnerAfterEnemy && onBattleEnd) onBattleEnd(winnerAfterEnemy);
   };
 
   return (
@@ -167,8 +176,25 @@ export default function BattleScreen({ route }: any) {
       <BattleActions
         moves={state.player.moves}
         onMovePress={attack}
+        onRun={onRun}
         disabled={!!state.attackingSide || !!state.winner}
       />
     </View>
+  );
+}
+
+export default function BattleScreen({ route, navigation }: BattleScreenProps) {
+  const { player, enemy, onRun } = route.params;
+
+  return (
+    <Battle
+      player={player}
+      enemy={enemy}
+      onBattleEnd={() => {
+        // You might want to wait a bit before navigating back
+        setTimeout(() => navigation.goBack(), 2000);
+      }}
+      onRun={onRun}
+    />
   );
 }

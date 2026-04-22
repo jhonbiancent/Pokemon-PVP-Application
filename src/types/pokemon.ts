@@ -1,15 +1,12 @@
 export type Move = {
   name: string;
   power: number;
+};
 export type Pokemon = {
   id?: number | string;
   pk_order?: number;
   name: string;
-...
-
   level: number;
-...
-
   type: string[];
   hp: number;
   maxHp: number;
@@ -20,6 +17,7 @@ export type Pokemon = {
   speed: number;
   frontImage: string;
   backImage: string;
+  isShiny?: boolean;
   moves: Move[];
   cry: string;
 };

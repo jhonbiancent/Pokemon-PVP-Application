@@ -1,23 +1,51 @@
-export function selectMoves(moves: any[], level: number) {
-  // 1. Filter for level-up moves only
-  const levelUpMoves = moves
+import type { RawMove, SelectedMove } from "@/src/encounter/types";
+
+const STRUGGLE: SelectedMove = {
+  name: "struggle",
+  url: "",
+  levelLearned: 0,
+};
+
+/**
+ * Filters a raw moves array down to the 4 most recently learned moves
+ * at or below the given level. Game-accurate: most recent = highest levelLearned.
+ *
+ * Falls back to [Struggle] if no level-up moves exist at the given level.
+ * This matches Gen 1 behaviour exactly.
+ */
+export function selectMoves(
+  rawMoves: RawMove[],
+  level: number,
+): SelectedMove[] {
+  const eligible = rawMoves
+    .filter((m) => m.levelLearned > 0 && m.levelLearned <= level)
+    .sort((a, b) => b.levelLearned - a.levelLearned)
+    .slice(0, 4);
+
+  if (eligible.length === 0) return [STRUGGLE];
+  return eligible;
+}
+
+/**
+ * Parses raw PokeAPI move data into our RawMove shape.
+ * Filters to level-up method only, picks latest generation detail.
+ */
+export function parseRawMoves(apiMoves: any[]): RawMove[] {
+  return apiMoves
     .map((m: any) => {
-      // Find the detail that matches level-up (prefer latest generation)
-      const levelUpDetail = m.version_group_details.find(
-        (detail: any) => detail.move_learn_method.name === "level-up",
-      );
+      const levelUpDetail = m.version_group_details
+        .filter((d: any) => d.move_learn_method.name === "level-up")
+        .sort((a: any, b: any) =>
+          b.version_group.url.localeCompare(a.version_group.url),
+        )[0];
+
+      if (!levelUpDetail) return null;
 
       return {
         name: m.move.name,
         url: m.move.url,
-        levelLearned: levelUpDetail ? levelUpDetail.level_learned_at : 999,
-      };
+        levelLearned: levelUpDetail.level_learned_at,
+      } satisfies RawMove;
     })
-    .filter((m) => m.levelLearned <= level); // Only moves learned at or below current level
-
-  // 2. Sort by level learned (most recent first)
-  const sortedMoves = levelUpMoves.sort((a, b) => b.levelLearned - a.levelLearned);
-
-  // 3. Take top 4 (the most recent ones)
-  return sortedMoves.slice(0, 4);
+    .filter((m): m is RawMove => m !== null);
 }

@@ -1,5 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Pokemon } from "./pokemon";
+import { Region, Area } from "../encounter/batchGenerator";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -7,7 +8,14 @@ export type RootStackParamList = {
   Dashboard: undefined;
   SelectPokemon: { team: Pokemon[] };
   Battle: { player: Pokemon; enemy: Pokemon };
-  PokemonList: undefined;
+  RegionSelect: { player: Pokemon };
+  AreaSelect: { region: Region; player: Pokemon };
+  EncounterFlow: { region: Region; area: Area; player: Pokemon; onExit: () => void; };
+  PokemonList: { 
+    mode?: "view" | "explore";
+    region?: Region;
+    area?: Area;
+  };
   PokemonStats: { pokemon: Pokemon };
   PokemonTeam: { initialTeam: Pokemon[]; onSave?: () => void };
 };
@@ -31,4 +39,16 @@ export type SelectPokemonScreenProps = NativeStackScreenProps<
 export type BattleScreenProps = NativeStackScreenProps<
   RootStackParamList,
   "Battle"
+>;
+export type RegionSelectScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  "RegionSelect"
+>;
+export type AreaSelectScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  "AreaSelect"
+>;
+export type EncounterFlowProps = NativeStackScreenProps<
+  RootStackParamList,
+  "EncounterFlow"
 >;

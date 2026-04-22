@@ -10,7 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { gen1Pokemon } from "../data/gen1Pokemon";
@@ -102,20 +102,20 @@ export default function PokemonListScreen({ navigation }: any) {
     player.play();
   };
 
-  // Build owned names set for O(1) lookup
-  const ownedNames = useMemo(
-    () => new Set(ownedPokemon.map((p) => p.pk_name.toLowerCase())),
-    [ownedPokemon],
-  );
-
-  // Merge selected region list with owned status
+  // Merged selected region list with owned status
   const mergedList = useMemo(() => {
     const regionList = REGION_DATA[selectedRegion] ?? [];
-    return regionList.map((p) => ({
-      ...p,
-      owned: ownedNames.has(p.name.toLowerCase()),
-    }));
-  }, [ownedNames, selectedRegion]);
+    return regionList.map((p) => {
+      const ownedInstance = ownedPokemon.find(
+        (op) => op.pk_name.toLowerCase() === p.name.toLowerCase(),
+      );
+      return {
+        ...p,
+        owned: !!ownedInstance,
+        instance: ownedInstance,
+      };
+    });
+  }, [ownedPokemon, selectedRegion]);
 
   const filtered = useMemo(() => {
     return mergedList.filter((p) => {
@@ -387,7 +387,7 @@ export default function PokemonListScreen({ navigation }: any) {
           renderItem={({ item }) => (
             <View style={[styles.card, item.owned && styles.cardOwned]}>
               <View style={styles.typeBadges}>
-                {item.types.map((t) => (
+                {item.types.map((t: string) => (
                   <View
                     key={t}
                     style={[
