@@ -37,7 +37,6 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
       Alert.alert("No Pokémon", "Add a Pokémon to your team first!");
       return;
     }
-
     try {
       // The first pokemon in the sorted list is our starter
       const playerPokemon = team[0];
@@ -136,7 +135,9 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
             style={styles.addButton}
             onPress={() => {
               playClick();
-              navigation.navigate("PokemonList");
+              navigation.navigate("PokemonList", {
+                mode: "view",
+              });
             }}
           >
             <Text style={styles.addButtonText}>View All</Text>

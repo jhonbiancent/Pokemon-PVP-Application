@@ -38,11 +38,12 @@ function getLocalData(id: number) {
 function hydrateEntry(entry: QueueEntry): EncounterPokemon {
   const local = getLocalData(entry.id);
 
-  const baseUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
-  const image = entry.isShiny
-    ? `${baseUrl}/shiny/${entry.id}.png`
-    : `${baseUrl}/${entry.id}.png`;
+  const baseUrl =
+    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown";
 
+  const image = entry.isShiny
+    ? `${baseUrl}/shiny/${entry.id}.gif`
+    : `${baseUrl}/${entry.id}.gif`;
   return {
     id: entry.id,
     name: local?.name ?? `pokemon-${entry.id}`,
@@ -90,26 +91,6 @@ export function useEncounterQueue(
   const queueRef = useRef<QueueEntry[]>([]);
   const isRefillingRef = useRef(false);
 
-  // ─── Visibility change handler (mobile backgrounding) ──────────────────────
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        // App returned to foreground — check if a refill was interrupted
-        if (isRefillingRef.current) {
-          isRefillingRef.current = false;
-          setIsRefilling(false);
-        }
-        // Re-run threshold check in case queue drained while backgrounded
-        checkAndRefill();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [region, area, checkAndRefill]);
-
   // ─── Refill logic ──────────────────────────────────────────────────────────
 
   const checkAndRefill = useCallback(async () => {
@@ -138,6 +119,26 @@ export function useEncounterQueue(
       setIsRefilling(false);
     }
   }, [region, area]);
+
+  // ─── Visibility change handler (mobile backgrounding) ──────────────────────
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        // App returned to foreground — check if a refill was interrupted
+        if (isRefillingRef.current) {
+          isRefillingRef.current = false;
+          setIsRefilling(false);
+        }
+        // Re-run threshold check in case queue drained while backgrounded
+        checkAndRefill();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [region, area, checkAndRefill]);
 
   // ─── Initial load ──────────────────────────────────────────────────────────
 

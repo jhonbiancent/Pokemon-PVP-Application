@@ -3,7 +3,6 @@ import * as Haptics from "expo-haptics";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -11,7 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { gen1Pokemon } from "../data/gen1Pokemon";
@@ -131,24 +130,6 @@ export default function PokemonListScreen({ navigation }: any) {
       return matchesSearch && matchesType && matchesOwnership;
     });
   }, [mergedList, search, selectedType, ownershipFilter]);
-
-  const handlePokemonPress = (item: any) => {
-    playClick();
-    if (route.params?.mode === "explore") {
-      if (item.owned && item.instance) {
-        navigation.navigate("RegionSelect", {
-          player: item.instance,
-        });
-      } else {
-        Alert.alert("Not Owned", "You can only explore with Pokémon you own!");
-      }
-      return;
-    }
-
-    if (item.owned && item.instance) {
-      navigation.navigate("PokemonStats", { pokemon: item.instance });
-    }
-  };
 
   const ownershipLabel = {
     all: "All",
@@ -406,7 +387,7 @@ export default function PokemonListScreen({ navigation }: any) {
           renderItem={({ item }) => (
             <View style={[styles.card, item.owned && styles.cardOwned]}>
               <View style={styles.typeBadges}>
-                {item.types.map((t) => (
+                {item.types.map((t: string) => (
                   <View
                     key={t}
                     style={[
