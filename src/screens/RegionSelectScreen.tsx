@@ -1,3 +1,4 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Dimensions,
@@ -11,7 +12,6 @@ import {
 } from "react-native";
 import type { Region } from "../encounter/batchGenerator";
 import { RegionSelectScreenProps } from "../types/navigation";
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type RegionConfig = {
@@ -122,21 +122,57 @@ function RegionCard({
         styles.regionCard,
         {
           width: cardWidth,
-          backgroundColor: "#111827",
-          opacity: region.available ? 1 : 0.35,
+          opacity: region.available ? 1 : 0.4,
           transform: [{ scale: pressed ? 0.97 : 1 }],
-          borderColor: isSelected ? "#4a90e2" : "#222",
+          borderColor: isSelected ? region.accent : "#222",
+          backgroundColor: region.color,
         },
       ]}
     >
-      <Text style={styles.regionName}>{region.label}</Text>
+      {/* Accent Bar */}
+      <View style={[styles.accentBar, { backgroundColor: region.accent }]} />
+
+      {/* Header */}
+      <View style={styles.cardHeader}>
+        <MaterialCommunityIcons
+          name="map-marker-radius"
+          size={18}
+          color={region.accent}
+        />
+
+        <Text style={styles.regionName}>{region.label}</Text>
+
+        {region.available && (
+          <Ionicons
+            name="checkmark-circle"
+            size={16}
+            color="#22c55e"
+            style={{ marginLeft: "auto" }}
+          />
+        )}
+      </View>
+
       <Text style={styles.regionSubtitle}>{region.subtitle}</Text>
+
+      {/* Generation */}
+      <View style={styles.genBadge}>
+        <Text style={styles.genText}>{region.generation}</Text>
+      </View>
 
       <View style={styles.divider} />
 
-      <Text style={styles.startersText}>{region.starters}</Text>
+      {/* Starters */}
+      <View style={styles.startersRow}>
+        <MaterialCommunityIcons name="pokeball" size={14} color="#9aa4b2" />
+        <Text style={styles.startersText}>{region.starters}</Text>
+      </View>
 
-      {!region.available && <Text style={styles.lockedText}>Coming Soon</Text>}
+      {!region.available && (
+        <View style={styles.lockedBadge}>
+          <Ionicons name="lock-closed" size={12} color="#aaa" />
+          <Text style={styles.lockedText}>Coming Soon</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -244,12 +280,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  regionCard: {
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-  },
-
   regionName: {
     fontSize: 16,
     color: "#fff",
@@ -284,5 +314,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6b7280",
     marginTop: 8,
+  },
+  accentBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+
+  genBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+
+  genText: {
+    fontSize: 10,
+    color: "#cbd5e1",
+  },
+
+  startersRow: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
+
+  lockedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 6,
+  },
+
+  regionCard: {
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    overflow: "hidden",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
 });
