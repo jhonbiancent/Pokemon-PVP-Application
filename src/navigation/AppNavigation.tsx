@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
+import AreaSelectScreen from "@/src/screens/AreaSelectScreen";
 import BattleScreen from "@/src/screens/BattleScreen";
 import DashboardScreen from "@/src/screens/DashboardScreen";
 import { EncounterFlow } from "@/src/screens/EncounterFlow";
@@ -9,6 +10,7 @@ import LoginScreen from "@/src/screens/LoginScreen";
 import PokemonListScreen from "@/src/screens/PokemonListScreen";
 import PokemonStatsScreen from "@/src/screens/PokemonStatsScreen";
 import PokemonTeamScreen from "@/src/screens/PokemonTeamScreen";
+import RegionSelectScreen from "@/src/screens/RegionSelectScreen";
 import SelectPokemonScreen from "@/src/screens/SelectPokemonScreen";
 import SignupScreen from "@/src/screens/SignupScreen";
 import { RootStackParamList } from "../types/navigation"; // adjust path as needed
@@ -109,6 +111,16 @@ export default function AppNavigator() {
           <Stack.Screen
             name="EncounterFlow"
             component={EncounterFlow}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RegionSelect"
+            component={RegionSelectScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AreaSelect"
+            component={AreaSelectScreen}
             options={{ headerShown: false }}
           />
         </>

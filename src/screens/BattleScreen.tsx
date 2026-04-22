@@ -16,9 +16,10 @@ interface BattleProps {
   player: Pokemon;
   enemy: Pokemon;
   onBattleEnd?: (winner: "player" | "enemy") => void;
+  onRun?: () => void;
 }
 
-export function Battle({ player, enemy, onBattleEnd }: BattleProps) {
+export function Battle({ player, enemy, onBattleEnd, onRun }: BattleProps) {
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true });
   }, []);
@@ -175,6 +176,7 @@ export function Battle({ player, enemy, onBattleEnd }: BattleProps) {
       <BattleActions
         moves={state.player.moves}
         onMovePress={attack}
+        onRun={onRun}
         disabled={!!state.attackingSide || !!state.winner}
       />
     </View>
@@ -182,7 +184,7 @@ export function Battle({ player, enemy, onBattleEnd }: BattleProps) {
 }
 
 export default function BattleScreen({ route, navigation }: BattleScreenProps) {
-  const { player, enemy } = route.params;
+  const { player, enemy, onRun } = route.params;
 
   return (
     <Battle
@@ -192,6 +194,7 @@ export default function BattleScreen({ route, navigation }: BattleScreenProps) {
         // You might want to wait a bit before navigating back
         setTimeout(() => navigation.goBack(), 2000);
       }}
+      onRun={onRun}
     />
   );
 }

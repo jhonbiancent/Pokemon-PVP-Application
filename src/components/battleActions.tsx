@@ -13,6 +13,7 @@ type Move = {
 type Props = {
   moves: Move[];
   onMovePress: (index: number) => void;
+  onRun?: () => void;
   disabled: boolean;
 };
 
@@ -40,7 +41,12 @@ const ACTION_CONFIG = [
     accent: "#4FC3F7",
   },
 ];
-export default function BattleActions({ moves, onMovePress, disabled }: Props) {
+export default function BattleActions({
+  moves,
+  onMovePress,
+  onRun,
+  disabled,
+}: Props) {
   const [menu, setMenu] = useState<"main" | "fight">("main");
 
   if (menu === "main") {
@@ -57,9 +63,10 @@ export default function BattleActions({ moves, onMovePress, disabled }: Props) {
               key={action.label}
               label={action.label}
               icon={action.icon} // pass icon as a prop
-              onPress={
-                action.label === "Fight" ? () => setMenu("fight") : () => {}
-              }
+              onPress={() => {
+                if (action.label === "Fight") setMenu("fight");
+                else if (action.label === "Run" && onRun) onRun();
+              }}
               disabled={disabled}
               variant="action"
             />

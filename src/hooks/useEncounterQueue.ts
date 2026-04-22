@@ -6,6 +6,7 @@ import {
 import type { EncounterPokemon, QueueEntry } from "@/src/encounter/types";
 import { selectMoves } from "@/src/utils/moveSelector";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 
 // Local Pokémon DB types — adjust import path to match your project
 import { gen1Pokemon } from "@/src/data/gen1Pokemon";
@@ -89,8 +90,8 @@ export function useEncounterQueue(
   // ─── Visibility change handler (mobile backgrounding) ──────────────────────
 
   useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === "visible") {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
         // App returned to foreground — check if a refill was interrupted
         if (isRefillingRef.current) {
           isRefillingRef.current = false;
@@ -99,13 +100,12 @@ export function useEncounterQueue(
         // Re-run threshold check in case queue drained while backgrounded
         checkAndRefill();
       }
-    }
+    });
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      subscription.remove();
     };
-  }, [region, area]);
+  }, [region, area, checkAndRefill]);
 
   // ─── Refill logic ──────────────────────────────────────────────────────────
 

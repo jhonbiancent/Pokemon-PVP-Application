@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -102,20 +103,20 @@ export default function PokemonListScreen({ navigation }: any) {
     player.play();
   };
 
-  // Build owned names set for O(1) lookup
-  const ownedNames = useMemo(
-    () => new Set(ownedPokemon.map((p) => p.pk_name.toLowerCase())),
-    [ownedPokemon],
-  );
-
-  // Merge selected region list with owned status
+  // Merged selected region list with owned status
   const mergedList = useMemo(() => {
     const regionList = REGION_DATA[selectedRegion] ?? [];
-    return regionList.map((p) => ({
-      ...p,
-      owned: ownedNames.has(p.name.toLowerCase()),
-    }));
-  }, [ownedNames, selectedRegion]);
+    return regionList.map((p) => {
+      const ownedInstance = ownedPokemon.find(
+        (op) => op.pk_name.toLowerCase() === p.name.toLowerCase(),
+      );
+      return {
+        ...p,
+        owned: !!ownedInstance,
+        instance: ownedInstance,
+      };
+    });
+  }, [ownedPokemon, selectedRegion]);
 
   const filtered = useMemo(() => {
     return mergedList.filter((p) => {
@@ -130,6 +131,24 @@ export default function PokemonListScreen({ navigation }: any) {
       return matchesSearch && matchesType && matchesOwnership;
     });
   }, [mergedList, search, selectedType, ownershipFilter]);
+
+  const handlePokemonPress = (item: any) => {
+    playClick();
+    if (route.params?.mode === "explore") {
+      if (item.owned && item.instance) {
+        navigation.navigate("RegionSelect", {
+          player: item.instance,
+        });
+      } else {
+        Alert.alert("Not Owned", "You can only explore with Pokémon you own!");
+      }
+      return;
+    }
+
+    if (item.owned && item.instance) {
+      navigation.navigate("PokemonStats", { pokemon: item.instance });
+    }
+  };
 
   const ownershipLabel = {
     all: "All",

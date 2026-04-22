@@ -7,16 +7,9 @@ import { Pokemon } from "../types/pokemon";
 import { calculateHp, calculateStat } from "../utils/statCalculator";
 import { Battle } from "./BattleScreen";
 import { EncounterTransitionScreen } from "./EncounterTransitionScreen";
+import { EncounterFlowProps } from "../types/navigation";
 
 type Screen = "transition" | "battle";
-
-type Props = {
-  region: Region;
-  area: Area;
-  player: Pokemon;
-  /** Called when player navigates away from this flow */
-  onExit: () => void;
-};
 
 /**
  * Maps EncounterPokemon (from the queue) to the full Pokemon type expected by the Battle component.
@@ -51,7 +44,8 @@ function mapEncounterToPokemon(encounter: EncounterPokemon): Pokemon {
 /**
  * EncounterFlow orchestrates the full region → area → battle loop.
  */
-export function EncounterFlow({ region, area, player, onExit }: Props) {
+export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
+  const { region, area, player, onExit } = route.params;
   const [screen, setScreen] = useState<Screen>("transition");
 
   const { currentEncounter, isReady, isInitialLoading, advance, reset } =
@@ -95,7 +89,7 @@ export function EncounterFlow({ region, area, player, onExit }: Props) {
 
   return (
     <View style={styles.container}>
-      <Battle player={player} enemy={enemy} onBattleEnd={handleBattleEnd} />
+      <Battle player={player} enemy={enemy} onBattleEnd={handleBattleEnd} onRun={handleExit} />
     </View>
   );
 }
