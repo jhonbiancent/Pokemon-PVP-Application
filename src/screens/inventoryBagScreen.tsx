@@ -9,6 +9,7 @@ import {
     View,
 } from "react-native";
 import { colors } from "../theme/color";
+import { InventoryBagScreenProps } from "../types/navigation";
 
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
@@ -60,7 +61,7 @@ const TABS: { key: BagCategory; label: string }[] = [
   { key: "key", label: "Key" },
 ];
 
-export default function InventoryBagScreen({ navigation }: any) {
+export default function InventoryBagScreen({ navigation }: InventoryBagScreenProps) {
   const [category, setCategory] = useState<BagCategory>("pokeballs");
 
   const player = useAudioPlayer(clickSound);

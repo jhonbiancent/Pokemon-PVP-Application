@@ -18,7 +18,13 @@ export type RootStackParamList = {
   };
   PokemonStats: { pokemon: Pokemon };
   PokemonTeam: { initialTeam: Pokemon[]; onSave?: () => void };
+  InventoryBag: undefined;
 };
+
+export type InventoryBagScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  "InventoryBag"
+>;
 
 export type DashboardScreenProps = NativeStackScreenProps<
   RootStackParamList,

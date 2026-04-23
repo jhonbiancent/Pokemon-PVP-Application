@@ -13,6 +13,7 @@ type Move = {
 type Props = {
   moves: Move[];
   onMovePress: (index: number) => void;
+  onBagPress?: () => void;
   onRun?: () => void;
   disabled: boolean;
 };
@@ -44,6 +45,7 @@ const ACTION_CONFIG = [
 export default function BattleActions({
   moves,
   onMovePress,
+  onBagPress,
   onRun,
   disabled,
 }: Props) {
@@ -65,6 +67,7 @@ export default function BattleActions({
               icon={action.icon} // pass icon as a prop
               onPress={() => {
                 if (action.label === "Fight") setMenu("fight");
+                else if (action.label === "Bag" && onBagPress) onBagPress();
                 else if (action.label === "Run" && onRun) onRun();
               }}
               disabled={disabled}
