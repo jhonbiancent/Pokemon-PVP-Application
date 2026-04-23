@@ -1,6 +1,6 @@
 import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
     FlatList,
     StyleSheet,
@@ -8,12 +8,61 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-
 import { colors } from "../theme/color";
 
 const clickSound = require("../../assets/sounds/buttonClick.mp3");
 
+type BagCategory = "pokeballs" | "items" | "battle" | "key";
+
+type BagItem = {
+  id: string;
+  name: string;
+  description: string;
+  catchRate: number;
+  color: string;
+};
+
+const POKEBALL_ITEMS: BagItem[] = [
+  {
+    id: "poke-ball",
+    name: "Poké Ball",
+    description: "A standard Poké Ball",
+    catchRate: 1,
+    color: "#EF5350",
+  },
+  {
+    id: "great-ball",
+    name: "Great Ball",
+    description: "Better catch rate than Poké Ball",
+    catchRate: 1.5,
+    color: "#42A5F5",
+  },
+  {
+    id: "ultra-ball",
+    name: "Ultra Ball",
+    description: "High performance ball",
+    catchRate: 2,
+    color: "#212121",
+  },
+  {
+    id: "master-ball",
+    name: "Master Ball",
+    description: "Catches without fail",
+    catchRate: 255,
+    color: "#AB47BC",
+  },
+];
+
+const TABS: { key: BagCategory; label: string }[] = [
+  { key: "pokeballs", label: "Poké Balls" },
+  { key: "items", label: "Items" },
+  { key: "battle", label: "Battle" },
+  { key: "key", label: "Key" },
+];
+
 export default function InventoryBagScreen({ navigation }: any) {
+  const [category, setCategory] = useState<BagCategory>("pokeballs");
+
   const player = useAudioPlayer(clickSound);
   player.volume = 1.0;
 
@@ -22,89 +71,82 @@ export default function InventoryBagScreen({ navigation }: any) {
     player.play();
   };
 
-  // placeholder empty list for now
-  const items: any[] = [];
+  const data = useMemo(() => {
+    if (category === "pokeballs") return POKEBALL_ITEMS;
+    return [];
+  }, [category]);
 
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const handleUseItem = (item: BagItem) => {
+    playClick();
+
+    // return to battle screen
+    navigation.goBack();
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Bag</Text>
-        <Text style={styles.subtitle}>Choose an item</Text>
-      </View>
-
-      {/* Grid */}
-      <FlatList
-        data={items}
-        keyExtractor={(_, i) => i.toString()}
-        numColumns={2}
-        contentContainerStyle={{ padding: 12, gap: 12 }}
-        columnWrapperStyle={{ gap: 12 }}
-        renderItem={({ item }) => (
+      {/* Tabs */}
+      <View style={styles.tabRow}>
+        {TABS.map((tab) => (
           <TouchableOpacity
-            style={[styles.card, selectedItem === item && styles.cardSelected]}
+            key={tab.key}
+            style={[
+              styles.tabButton,
+              category === tab.key && styles.tabButtonActive,
+            ]}
             onPress={() => {
               playClick();
-              setSelectedItem(item);
+              setCategory(tab.key);
             }}
           >
-            {/* icon placeholder */}
-            <View style={styles.iconPlaceholder} />
+            <Text
+              style={[
+                styles.tabText,
+                category === tab.key && styles.tabTextActive,
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-            <Text style={styles.itemName}>Poké Ball</Text>
+      {/* List */}
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 12, gap: 12 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleUseItem(item)}
+          >
+            <View
+              style={[styles.ballIndicator, { backgroundColor: item.color }]}
+            />
 
-            <View style={styles.qtyBadge}>
-              <Text style={styles.qtyText}>x0</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemDesc}>{item.description}</Text>
+
+              <Text style={styles.catchPreview}>
+                Catch Chance: {formatCatchRate(item.catchRate)}
+              </Text>
             </View>
+
+            <Text style={styles.useText}>USE</Text>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>🎒</Text>
-            <Text style={styles.emptyTitle}>No Items</Text>
-            <Text style={styles.emptySubtitle}>
-              Your bag is currently empty
-            </Text>
-          </View>
-        }
       />
-
-      {/* Bottom Info Panel */}
-      <View style={styles.bottomPanel}>
-        {selectedItem ? (
-          <>
-            <Text style={styles.itemTitle}>Poké Ball</Text>
-            <Text style={styles.itemDesc}>
-              A device for catching wild Pokémon.
-            </Text>
-
-            <TouchableOpacity
-              style={styles.useButton}
-              onPress={() => {
-                playClick();
-              }}
-            >
-              <Text style={styles.useButtonText}>Use Item</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <Text style={styles.selectHint}>Select an item to view details</Text>
-        )}
-
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => {
-            playClick();
-            navigation.goBack();
-          }}
-        >
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
+}
+
+function formatCatchRate(rate: number) {
+  if (rate === 255) return "Guaranteed";
+  if (rate >= 2) return "Very High";
+  if (rate >= 1.5) return "High";
+  return "Normal";
 }
 
 const styles = StyleSheet.create({
@@ -113,135 +155,76 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
 
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+  tabRow: {
+    flexDirection: "row",
+    padding: 12,
+    gap: 8,
   },
 
-  title: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: "bold",
+  tabButton: {
+    flex: 1,
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
   },
 
-  subtitle: {
+  tabButtonActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent + "22",
+  },
+
+  tabText: {
     color: colors.textMuted,
-    fontSize: 13,
-    marginTop: 2,
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+
+  tabTextActive: {
+    color: colors.accent,
   },
 
   card: {
-    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.bgCard,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 120,
+    padding: 14,
+    gap: 12,
   },
 
-  cardSelected: {
-    borderColor: colors.accent,
-  },
-
-  iconPlaceholder: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.border,
-    marginBottom: 8,
+  ballIndicator: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
 
   itemName: {
     color: colors.textPrimary,
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-
-  qtyBadge: {
-    marginTop: 6,
-    backgroundColor: colors.accent + "33",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-
-  qtyText: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: "bold",
-  },
-
-  emptyContainer: {
-    marginTop: 80,
-    alignItems: "center",
-  },
-
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-
-  emptyTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  emptySubtitle: {
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-
-  bottomPanel: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    padding: 16,
-    paddingBottom: 30,
-    backgroundColor: colors.bg,
-  },
-
-  itemTitle: {
-    color: colors.textPrimary,
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "bold",
   },
 
   itemDesc: {
     color: colors.textMuted,
-    marginTop: 4,
-    marginBottom: 12,
+    fontSize: 12,
+    marginTop: 2,
   },
 
-  useButton: {
-    backgroundColor: colors.accent,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  useButtonText: {
-    color: "white",
+  catchPreview: {
+    color: colors.accent,
+    fontSize: 12,
+    marginTop: 6,
     fontWeight: "bold",
   },
 
-  selectHint: {
-    color: colors.textMuted,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  backButton: {
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-
-  backText: {
-    color: colors.textMuted,
+  useText: {
+    color: colors.accent,
     fontWeight: "bold",
+    fontSize: 12,
   },
 });
