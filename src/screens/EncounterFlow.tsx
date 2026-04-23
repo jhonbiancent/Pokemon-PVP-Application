@@ -67,6 +67,11 @@ export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
   // Fetch move details when a new encounter arrives
   useEffect(() => {
     if (currentEncounter && isReady) {
+      // Prevent re-fetching if we already have the fully loaded enemy for THIS encounter
+      if (fullyLoadedEnemy && fullyLoadedEnemy.id === currentEncounter.id && fullyLoadedEnemy.level === currentEncounter.level) {
+        return;
+      }
+
       async function loadMoveDetails() {
         setIsLoadingMoves(true);
         try {
