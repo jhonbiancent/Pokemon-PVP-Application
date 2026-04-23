@@ -2,11 +2,10 @@ import { useAudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { useMemo, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList, Image, StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { colors } from "../theme/color";
 import { InventoryBagScreenProps } from "../types/navigation";
@@ -20,7 +19,7 @@ type BagItem = {
   name: string;
   description: string;
   catchRate: number;
-  color: string;
+  sprite: any;
 };
 
 const POKEBALL_ITEMS: BagItem[] = [
@@ -29,28 +28,28 @@ const POKEBALL_ITEMS: BagItem[] = [
     name: "Poké Ball",
     description: "A standard Poké Ball",
     catchRate: 1,
-    color: "#EF5350",
+    sprite: require("../../assets/items/pokeball.png"),
   },
   {
     id: "great-ball",
     name: "Great Ball",
     description: "Better catch rate than Poké Ball",
     catchRate: 1.5,
-    color: "#42A5F5",
+    sprite: require("../../assets/items/greatball.png"),
   },
   {
     id: "ultra-ball",
     name: "Ultra Ball",
     description: "High performance ball",
     catchRate: 2,
-    color: "#212121",
+    sprite: require("../../assets/items/ultraball.png"),
   },
   {
     id: "master-ball",
     name: "Master Ball",
     description: "Catches without fail",
     catchRate: 255,
-    color: "#AB47BC",
+    sprite: require("../../assets/items/masterball.png"),
   },
 ];
 
@@ -61,7 +60,9 @@ const TABS: { key: BagCategory; label: string }[] = [
   { key: "key", label: "Key" },
 ];
 
-export default function InventoryBagScreen({ navigation }: InventoryBagScreenProps) {
+export default function InventoryBagScreen({
+  navigation,
+}: InventoryBagScreenProps) {
   const [category, setCategory] = useState<BagCategory>("pokeballs");
 
   const player = useAudioPlayer(clickSound);
@@ -122,8 +123,10 @@ export default function InventoryBagScreen({ navigation }: InventoryBagScreenPro
             style={styles.card}
             onPress={() => handleUseItem(item)}
           >
-            <View
-              style={[styles.ballIndicator, { backgroundColor: item.color }]}
+            <Image
+              source={item.sprite}
+              style={styles.ballSprite}
+              resizeMode="contain"
             />
 
             <View style={{ flex: 1 }}>
@@ -197,7 +200,10 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 12,
   },
-
+  ballSprite: {
+    width: 36,
+    height: 36,
+  },
   ballIndicator: {
     width: 14,
     height: 14,
