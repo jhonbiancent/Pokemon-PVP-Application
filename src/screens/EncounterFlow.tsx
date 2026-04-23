@@ -1,7 +1,8 @@
 import type { Area, Region } from "@/src/encounter/batchGenerator";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { EncounterPokemon } from "../encounter/types";
+import { EncounterPokemon, MoveDetail } from "../encounter/types";
+import { fetchMoveBatch } from "../encounter/fetchWithCache";
 import { useEncounterQueue } from "../hooks/useEncounterQueue";
 import { Pokemon } from "../types/pokemon";
 import { calculateHp, calculateStat } from "../utils/statCalculator";
@@ -12,9 +13,12 @@ import { EncounterFlowProps } from "../types/navigation";
 type Screen = "transition" | "battle";
 
 /**
- * Maps EncounterPokemon (from the queue) to the full Pokemon type expected by the Battle component.
+ * Maps EncounterPokemon (from the queue) and fetched move details to the full Pokemon type.
  */
-function mapEncounterToPokemon(encounter: EncounterPokemon): Pokemon {
+function mapEncounterToPokemon(
+  encounter: EncounterPokemon,
+  moveDetails: MoveDetail[],
+): Pokemon {
   const hp = calculateHp(encounter.baseStats.hp, encounter.level);
   return {
     id: encounter.id,
@@ -34,9 +38,13 @@ function mapEncounterToPokemon(encounter: EncounterPokemon): Pokemon {
     frontImage: encounter.image,
     backImage: encounter.image,
     isShiny: encounter.isShiny,
-    moves: encounter.moves.map((m) => ({
-      name: m.name,
-      power: 40, // Default power for wild encounters since we don't fetch move details here
+    moves: moveDetails.map((detail) => ({
+      name: detail.name,
+      power: detail.power ?? 10,
+      damageClass: detail.damageClass,
+      type: detail.type,
+      accuracy: detail.accuracy,
+      statChanges: detail.statChanges,
     })),
     cry: `https://play.pokemonshowdown.com/audio/cries/${encounter.name.toLowerCase().replace(/[^a-z]/g, "")}.mp3`,
   };
@@ -48,9 +56,39 @@ function mapEncounterToPokemon(encounter: EncounterPokemon): Pokemon {
 export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
   const { region, area, player, onExit } = route.params;
   const [screen, setScreen] = useState<Screen>("transition");
+  const [fullyLoadedEnemy, setFullyLoadedEnemy] = useState<Pokemon | null>(
+    null,
+  );
+  const [isLoadingMoves, setIsLoadingMoves] = useState(false);
 
   const { currentEncounter, isReady, isInitialLoading, advance, reset } =
     useEncounterQueue(region, area);
+
+  // Fetch move details when a new encounter arrives
+  useEffect(() => {
+    if (currentEncounter && isReady) {
+      // Prevent re-fetching if we already have the fully loaded enemy for THIS encounter
+      if (fullyLoadedEnemy && fullyLoadedEnemy.id === currentEncounter.id && fullyLoadedEnemy.level === currentEncounter.level) {
+        return;
+      }
+
+      async function loadMoveDetails() {
+        setIsLoadingMoves(true);
+        try {
+          const moveDetails = await fetchMoveBatch(currentEncounter.moves);
+          const enemy = mapEncounterToPokemon(currentEncounter, moveDetails);
+          setFullyLoadedEnemy(enemy);
+        } catch (error) {
+          console.error("[EncounterFlow] Failed to load move details:", error);
+        } finally {
+          setIsLoadingMoves(false);
+        }
+      }
+      loadMoveDetails();
+    } else {
+      setFullyLoadedEnemy(null);
+    }
+  }, [currentEncounter, isReady]);
 
   const handleTransitionReady = useCallback(() => {
     setScreen("battle");
@@ -78,19 +116,23 @@ export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
       <EncounterTransitionScreen
         region={region}
         area={area}
-        isDataReady={!isInitialLoading && isReady}
+        isDataReady={!isInitialLoading && isReady && !!fullyLoadedEnemy && !isLoadingMoves}
         onReady={handleTransitionReady}
       />
     );
   }
 
-  if (!currentEncounter) return null;
-
-  const enemy = mapEncounterToPokemon(currentEncounter);
+  if (!fullyLoadedEnemy) return null;
 
   return (
     <View style={styles.container}>
-      <Battle player={player} enemy={enemy} onBattleEnd={handleBattleEnd} onRun={handleExit} />
+      <Battle
+        player={player}
+        enemy={fullyLoadedEnemy}
+        onBattleEnd={handleBattleEnd}
+        onRun={handleExit}
+        onBagPress={() => navigation.navigate("InventoryBag")}
+      />
     </View>
   );
 }

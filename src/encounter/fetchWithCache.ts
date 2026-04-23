@@ -1,4 +1,4 @@
-import type { BaseStats, PokemonRawData } from "@/src/encounter/types";
+import type { BaseStats, MoveDetail, PokemonRawData } from "@/src/encounter/types";
 import { parseRawMoves } from "@/src/utils/moveSelector";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -13,12 +13,18 @@ const RETRY_DELAYS_MS = [500, 1000, 2000];
 /** Permanent store: id → resolved raw data */
 const pokemonCache = new Map<number, PokemonRawData>();
 
+/** Permanent store: moveUrl → resolved move detail */
+const moveCache = new Map<string, MoveDetail>();
+
 /**
  * Promise registry: id → in-flight promise.
  * Any concurrent call for the same id joins this promise
  * instead of firing a new network request.
  */
 const pendingFetches = new Map<number, Promise<PokemonRawData>>();
+
+/** Promise registry for move details */
+const pendingMoveFetches = new Map<string, Promise<MoveDetail>>();
 
 // ─── Fallback data ────────────────────────────────────────────────────────────
 
@@ -41,6 +47,19 @@ export function buildFallback(): PokemonRawData {
   };
 }
 
+export function buildMoveFallback(name: string): MoveDetail {
+  return {
+    name,
+    power: 40,
+    accuracy: 100,
+    pp: 35,
+    type: "normal",
+    damageClass: "physical",
+    effectChance: null,
+    statChanges: [],
+  };
+}
+
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function parseStats(apiStats: any[]): BaseStats {
@@ -54,6 +73,22 @@ function parseStats(apiStats: any[]): BaseStats {
     spAttack: get("special-attack"),
     spDefense: get("special-defense"),
     speed: get("speed"),
+  };
+}
+
+function parseMoveDetail(data: any): MoveDetail {
+  return {
+    name: data.name,
+    power: data.power,
+    accuracy: data.accuracy,
+    pp: data.pp,
+    type: data.type.name,
+    damageClass: data.damage_class.name,
+    effectChance: data.effect_chance,
+    statChanges: data.stat_changes.map((sc: any) => ({
+      stat: sc.stat.name,
+      change: sc.change,
+    })),
   };
 }
 
@@ -85,6 +120,28 @@ async function attemptFetch(id: number): Promise<PokemonRawData> {
   }
 }
 
+async function attemptMoveFetch(url: string, name: string): Promise<MoveDetail> {
+  if (!url) return buildMoveFallback(name);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`PokeAPI returned ${res.status} for move url ${url}`);
+    }
+
+    const data = await res.json();
+    return parseMoveDetail(data);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Retries up to MAX_RETRIES times with exponential-ish backoff.
  * Falls back to buildFallback() if all attempts fail.
@@ -108,18 +165,32 @@ async function fetchWithRetry(id: number): Promise<PokemonRawData> {
   return buildFallback();
 }
 
+async function fetchMoveWithRetry(
+  url: string,
+  name: string,
+): Promise<MoveDetail> {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await attemptMoveFetch(url, name);
+    } catch (err) {
+      const isLast = attempt === MAX_RETRIES - 1;
+      if (isLast) break;
+
+      const delay = RETRY_DELAYS_MS[attempt] ?? 2000;
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  console.warn(
+    `[fetchWithCache] All retries exhausted for move ${name}. Using fallback.`,
+  );
+  return buildMoveFallback(name);
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * The main cache-aware fetch function.
- *
- * Priority order:
- *   1. Cache hit       → return immediately, zero network
- *   2. In-flight hit   → await the SAME promise, zero duplicate requests
- *   3. New fetch       → register promise first, then fetch with retry + fallback
- *
- * The promise is registered BEFORE awaiting so any concurrent call
- * that arrives after this line already sees it and joins rather than duplicates.
  */
 export async function fetchWithCache(id: number): Promise<PokemonRawData> {
   // 1. Cache hit
@@ -140,6 +211,33 @@ export async function fetchWithCache(id: number): Promise<PokemonRawData> {
     });
 
   pendingFetches.set(id, fetchPromise);
+  return fetchPromise;
+}
+
+/**
+ * Fetches detail for a single move with caching and deduplication.
+ */
+export async function fetchMoveWithCache(
+  url: string,
+  name: string,
+): Promise<MoveDetail> {
+  // 1. Cache hit
+  if (moveCache.has(url)) return moveCache.get(url)!;
+
+  // 2. In-flight hit
+  if (pendingMoveFetches.has(url)) return pendingMoveFetches.get(url)!;
+
+  // 3. New fetch
+  const fetchPromise = fetchMoveWithRetry(url, name)
+    .then((data) => {
+      moveCache.set(url, data);
+      return data;
+    })
+    .finally(() => {
+      pendingMoveFetches.delete(url);
+    });
+
+  pendingMoveFetches.set(url, fetchPromise);
   return fetchPromise;
 }
 
@@ -172,13 +270,32 @@ export async function fetchBatch(
   return map;
 }
 
+/**
+ * Fetches full details for multiple moves in parallel.
+ * Uses moveCache for efficiency.
+ */
+export async function fetchMoveBatch(
+  moves: { name: string; url: string }[],
+): Promise<MoveDetail[]> {
+  const results = await Promise.allSettled(
+    moves.map((m) => fetchMoveWithCache(m.url, m.name)),
+  );
+
+  return results.map((res, i) => {
+    if (res.status === "fulfilled") return res.value;
+    return buildMoveFallback(moves[i].name);
+  });
+}
+
 /** Expose cache size for debugging / dev tools */
 export function getCacheSize(): number {
-  return pokemonCache.size;
+  return pokemonCache.size + moveCache.size;
 }
 
 /** Clear cache — useful for testing */
 export function clearCache(): void {
   pokemonCache.clear();
+  moveCache.clear();
   pendingFetches.clear();
+  pendingMoveFetches.clear();
 }

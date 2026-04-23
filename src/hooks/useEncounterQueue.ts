@@ -5,7 +5,7 @@ import {
 } from "@/src/encounter/batchGenerator";
 import type { EncounterPokemon, QueueEntry } from "@/src/encounter/types";
 import { selectMoves } from "@/src/utils/moveSelector";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 
 // Local Pokémon DB types — adjust import path to match your project
@@ -197,7 +197,11 @@ export function useEncounterQueue(
   // ─── Derived state ─────────────────────────────────────────────────────────
 
   const currentEntry = queue[0] ?? null;
-  const currentEncounter = currentEntry ? hydrateEntry(currentEntry) : null;
+
+  const currentEncounter = useMemo(() => {
+    return currentEntry ? hydrateEntry(currentEntry) : null;
+  }, [currentEntry]);
+
   const isReady = currentEncounter !== null && !isInitialLoading;
 
   return {

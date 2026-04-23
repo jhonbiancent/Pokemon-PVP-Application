@@ -19,6 +19,17 @@ export type RawMove = {
   levelLearned: number;
 };
 
+export type MoveDetail = {
+  name: string;
+  power: number | null;
+  accuracy: number | null;
+  pp: number | null;
+  type: string;
+  damageClass: "physical" | "special" | "status";
+  effectChance: number | null;
+  statChanges: { stat: string; change: number }[];
+};
+
 export type SelectedMove = {
   name: string;
   url: string;

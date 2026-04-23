@@ -1,6 +1,10 @@
 export type Move = {
   name: string;
   power: number;
+  damageClass?: string;
+  type?: string;
+  accuracy?: number | null;
+  statChanges?: { stat: string; change: number }[];
 };
 export type Pokemon = {
   id?: number | string;

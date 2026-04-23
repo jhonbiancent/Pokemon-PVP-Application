@@ -2,10 +2,10 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Image,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
@@ -17,13 +17,15 @@ export default function SelectPokemonScreen({
   navigation,
   route,
 }: SelectPokemonScreenProps) {
-  const { team } = route.params; // current team passed from Dashboard
+  const { team } = route.params;
+
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pokemon, setPokemon] = useState<any>(null);
 
   const { user } = useAuth();
+
   const handleSearch = async () => {
     try {
       setLoading(true);
@@ -52,54 +54,159 @@ export default function SelectPokemonScreen({
 
     try {
       setSaving(true);
-      await savePokemon(pokemon, user.id); // 👈 user from useAuth(), not supabase
+      await savePokemon(pokemon, user.id);
+
       Alert.alert("Added!", `${pokemon.name} was added to your team.`, [
         { text: "OK", onPress: () => navigation.navigate("Dashboard") },
       ]);
     } catch (e) {
-      console.error(e);
       Alert.alert("Error", "Could not save Pokémon. Try again.");
     } finally {
       setSaving(false);
     }
   };
 
+  const teamFull = team.length >= 6;
+
   return (
-    <View style={{ padding: 20, marginTop: 50 }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
-        Add Pokémon to Team ({team.length}/6)
+    <View
+      style={{
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#0f172a",
+      }}
+    >
+      {/* Header */}
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          color: "white",
+          marginBottom: 4,
+        }}
+      >
+        Add Pokémon
       </Text>
 
-      <TextInput
-        placeholder="Enter pokemon name"
-        value={search}
-        onChangeText={setSearch}
-        style={{ borderWidth: 1, padding: 10, marginVertical: 10 }}
-      />
+      <Text
+        style={{
+          color: "#94a3b8",
+          marginBottom: 16,
+        }}
+      >
+        Team: {team.length}/6
+      </Text>
 
-      <Button title="Search" onPress={handleSearch} />
-      {loading && <ActivityIndicator />}
+      {/* Search Bar */}
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 8,
+          marginBottom: 16,
+        }}
+      >
+        <TextInput
+          placeholder="Search Pokémon..."
+          placeholderTextColor="#64748b"
+          value={search}
+          onChangeText={setSearch}
+          style={{
+            flex: 1,
+            backgroundColor: "#1e293b",
+            color: "white",
+            padding: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "#334155",
+          }}
+        />
 
-      {pokemon && (
-        <View style={{ marginTop: 20, alignItems: "center" }}>
-          <Text style={{ fontSize: 18, textTransform: "capitalize" }}>
-            {pokemon.name}
-          </Text>
-          <Text style={{ color: "gray" }}>Type: {pokemon.type.join(", ")}</Text>
+        <TouchableOpacity
+          onPress={handleSearch}
+          style={{
+            backgroundColor: "#22c55e",
+            paddingHorizontal: 16,
+            justifyContent: "center",
+            borderRadius: 12,
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "bold" }}>Search</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Loading */}
+      {loading && (
+        <ActivityIndicator
+          size="large"
+          color="#22c55e"
+          style={{ marginTop: 20 }}
+        />
+      )}
+
+      {/* Pokemon Card */}
+      {pokemon && !loading && (
+        <View
+          style={{
+            backgroundColor: "#1e293b",
+            borderRadius: 20,
+            padding: 20,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "#334155",
+          }}
+        >
           <Image
             source={{ uri: pokemon.frontImage }}
-            style={{ width: 100, height: 100 }}
+            style={{
+              width: 140,
+              height: 140,
+              marginBottom: 10,
+            }}
           />
 
-          {team.length < 6 ? (
-            <Button
-              title={saving ? "Adding..." : "Add to Team"}
-              onPress={handleAddToTeam}
-              disabled={saving}
-            />
-          ) : (
-            <Text style={{ color: "red", marginTop: 10 }}>Team is full!</Text>
-          )}
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "white",
+              textTransform: "capitalize",
+            }}
+          >
+            {pokemon.name}
+          </Text>
+
+          <Text
+            style={{
+              color: "#94a3b8",
+              marginBottom: 16,
+              textTransform: "capitalize",
+            }}
+          >
+            {pokemon.type.join(" • ")}
+          </Text>
+
+          <TouchableOpacity
+            onPress={handleAddToTeam}
+            disabled={teamFull || saving}
+            style={{
+              backgroundColor: teamFull ? "#475569" : "#22c55e",
+              paddingVertical: 12,
+              paddingHorizontal: 30,
+              borderRadius: 12,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "white",
+                fontWeight: "bold",
+                fontSize: 16,
+              }}
+            >
+              {teamFull ? "Team Full" : saving ? "Adding..." : "Add to Team"}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>

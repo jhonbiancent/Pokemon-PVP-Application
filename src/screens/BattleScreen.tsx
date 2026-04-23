@@ -7,8 +7,8 @@ import PokemonCard from "../components/pokemonCard";
 import { getRandomMove } from "../battle/ai";
 import { dealDamage, isGameOver } from "../battle/battleEngine";
 import { BattleState } from "../battle/battleTypes";
-import { Pokemon } from "../types/pokemon";
 import { BattleScreenProps } from "../types/navigation";
+import { Pokemon } from "../types/pokemon";
 
 import { setAudioModeAsync } from "expo-audio";
 
@@ -17,9 +17,16 @@ interface BattleProps {
   enemy: Pokemon;
   onBattleEnd?: (winner: "player" | "enemy") => void;
   onRun?: () => void;
+  onBagPress?: () => void;
 }
 
-export function Battle({ player, enemy, onBattleEnd, onRun }: BattleProps) {
+export function Battle({
+  player,
+  enemy,
+  onBattleEnd,
+  onRun,
+  onBagPress,
+}: BattleProps) {
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true });
   }, []);
@@ -176,6 +183,7 @@ export function Battle({ player, enemy, onBattleEnd, onRun }: BattleProps) {
       <BattleActions
         moves={state.player.moves}
         onMovePress={attack}
+        onBagPress={onBagPress}
         onRun={onRun}
         disabled={!!state.attackingSide || !!state.winner}
       />
@@ -195,6 +203,7 @@ export default function BattleScreen({ route, navigation }: BattleScreenProps) {
         setTimeout(() => navigation.goBack(), 2000);
       }}
       onRun={onRun}
+      onBagPress={() => navigation.navigate("InventoryBag")}
     />
   );
 }
