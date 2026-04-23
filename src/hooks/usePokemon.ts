@@ -1,4 +1,5 @@
-import { fetchMoveDetail, fetchPokemon } from "../api/pokeApi";
+import { fetchPokemon } from "../api/pokeApi";
+import { fetchMoveBatch } from "../encounter/fetchWithCache";
 import { Pokemon } from "../types/pokemon";
 import { selectMoves } from "../utils/moveSelector";
 import { calculateHp, calculateStat } from "../utils/statCalculator";
@@ -12,14 +13,17 @@ export async function getPokemon(
   // 1. Get Move Selection (logic for most recent level-up moves)
   const selectedMoveData = selectMoves(data.moves, level);
 
-  // 2. Fetch Move Details in parallel to get actual "power"
-  const movePromises = selectedMoveData.map((m) => fetchMoveDetail(m.url));
-  const moveDetails = await Promise.all(movePromises);
+  // 2. Fetch Move Details in parallel with caching
+  const moveDetails = await fetchMoveBatch(selectedMoveData);
 
   // 3. Map to final Move format
-  const moves = moveDetails.map((detail, index) => ({
-    name: selectedMoveData[index].name,
-    power: detail?.power || 10, // Default to 10 if move has no power (like status moves)
+  const moves = moveDetails.map((detail) => ({
+    name: detail.name,
+    power: detail.power ?? 10,
+    damageClass: detail.damageClass,
+    type: detail.type,
+    accuracy: detail.accuracy,
+    statChanges: detail.statChanges,
   }));
 
   const getBaseStat = (statName: string) =>
