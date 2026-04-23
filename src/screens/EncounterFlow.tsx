@@ -90,7 +90,13 @@ export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
 
   return (
     <View style={styles.container}>
-      <Battle player={player} enemy={enemy} onBattleEnd={handleBattleEnd} onRun={handleExit} />
+      <Battle
+        player={player}
+        enemy={enemy}
+        onBattleEnd={handleBattleEnd}
+        onRun={handleExit}
+        onBagPress={() => navigation.navigate("InventoryBag")}
+      />
     </View>
   );
 }
