@@ -1,14 +1,13 @@
-import type { Area, Region } from "@/src/encounter/batchGenerator";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { EncounterPokemon, MoveDetail } from "../encounter/types";
 import { fetchMoveBatch } from "../encounter/fetchWithCache";
+import { EncounterPokemon, MoveDetail } from "../encounter/types";
 import { useEncounterQueue } from "../hooks/useEncounterQueue";
+import { EncounterFlowProps } from "../types/navigation";
 import { Pokemon } from "../types/pokemon";
 import { calculateHp, calculateStat } from "../utils/statCalculator";
 import { Battle } from "./BattleScreen";
 import { EncounterTransitionScreen } from "./EncounterTransitionScreen";
-import { EncounterFlowProps } from "../types/navigation";
 
 type Screen = "transition" | "battle";
 
@@ -40,7 +39,7 @@ function mapEncounterToPokemon(
     isShiny: encounter.isShiny,
     moves: moveDetails.map((detail) => ({
       name: detail.name,
-      power: detail.power ?? 10,
+      power: detail.power ?? 0,
       damageClass: detail.damageClass,
       type: detail.type,
       accuracy: detail.accuracy,
@@ -68,7 +67,11 @@ export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
   useEffect(() => {
     if (currentEncounter && isReady) {
       // Prevent re-fetching if we already have the fully loaded enemy for THIS encounter
-      if (fullyLoadedEnemy && fullyLoadedEnemy.id === currentEncounter.id && fullyLoadedEnemy.level === currentEncounter.level) {
+      if (
+        fullyLoadedEnemy &&
+        fullyLoadedEnemy.id === currentEncounter.id &&
+        fullyLoadedEnemy.level === currentEncounter.level
+      ) {
         return;
       }
 
@@ -116,7 +119,9 @@ export function EncounterFlow({ route, navigation }: EncounterFlowProps) {
       <EncounterTransitionScreen
         region={region}
         area={area}
-        isDataReady={!isInitialLoading && isReady && !!fullyLoadedEnemy && !isLoadingMoves}
+        isDataReady={
+          !isInitialLoading && isReady && !!fullyLoadedEnemy && !isLoadingMoves
+        }
         onReady={handleTransitionReady}
       />
     );
